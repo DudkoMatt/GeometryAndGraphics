@@ -1,13 +1,14 @@
 #include <iostream>
 
-void write_header(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value);
+void write_header(FILE *file_out, char char_header, int width, int height, unsigned int max_value);
 void write_data(FILE *file_out, int k_bytes, unsigned char *pix_data);
 
-void inversion(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data);
-void vertical_reflection(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value, int k_bytes, const unsigned char *pix_data, bool is_color);
-void horizontal_reflection(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value, int k_bytes, const unsigned char *pix_data, bool is_color);
-void rotate_clockwise_90(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value, int k_bytes, const unsigned char *pix_data, bool is_color);
-void rotate_counter_clockwise_90(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value, int k_bytes, const unsigned char *pix_data, bool is_color);
+void inversion(FILE *file_out, char char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data);
+void vertical_reflection(FILE *file_out, char char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data, bool is_color);
+void horizontal_reflection(FILE *file_out, char char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data, bool is_color);
+void rotate_clockwise_90(FILE *file_out, char char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data, bool is_color);
+void rotate_counter_clockwise_90(FILE *file_out, char char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data, bool is_color);
+void free_data(FILE *file_in, FILE *file_out, unsigned char *pix_data);
 
 int main(int argc, char *argv[]) {
 
@@ -30,7 +31,9 @@ int main(int argc, char *argv[]) {
     // Часть 2: проверка на существование файла. Попытка открыть файл на запись
     // Note: предполагаем, что в картинках нет комментариев
 
-    FILE *file_in;
+    unsigned char *pix_data = nullptr;
+    FILE *file_in = nullptr, *file_out = nullptr;
+
     file_in = fopen(file_in_name, "rb");
 
     if (file_in == nullptr) {
@@ -41,36 +44,40 @@ int main(int argc, char *argv[]) {
     // Часть 3: чтение файла
 
     // Чтение заголовка
-    char *char_header = new char;
+    char char_header;
     int width, height;
     unsigned int max_value;
 
-    int scanned = fscanf(file_in, "P%c\n%i %i\n%i\n", char_header, &width, &height, &max_value);
+    int scanned = fscanf(file_in, "P%c\n%i %i\n%i\n", &char_header, &width, &height, &max_value);
 
-    if (scanned <= 0) {
+    if (scanned != 4) {
         std::cout << "Something went wrong. Error during scanning header\n";
+        free_data(file_in, file_out, pix_data);
         return 0;
     }
 
     if (width <= 0 || height <= 0 || max_value <= 0 || max_value > 255) {
         std::cout << "Something went wrong. At least one of the numbers is wrong. Maybe there is a comment in a file\n";
+        free_data(file_in, file_out, pix_data);
         return 0;
     }
 
     int k_bytes = height * width;
 
     bool is_color = false;
-    if (*char_header == '6') {
+    if (char_header == '6') {
         k_bytes *= 3;
         is_color = true;
-    } else if (*char_header != '5') {
+    } else if (char_header != '5') {
         std::cout << "Unsupported file format\n";
+        free_data(file_in, file_out, pix_data);
         return 0;
     }
 
-    auto pix_data = (unsigned char *) calloc(k_bytes, 1);
+    pix_data = (unsigned char *) calloc(k_bytes, 1);
     if (!pix_data) {
         std::cout << "Cannot allocate " << k_bytes << " bytes of memory\n";
+        free_data(file_in, file_out, pix_data);
         return 0;
     }
 
@@ -79,6 +86,7 @@ int main(int argc, char *argv[]) {
     if (bytes_read < k_bytes) {
         std::cout << "Can't read all data:\n";
         std::cout << "Expected " << k_bytes << " bytes, but only " << bytes_read << " were read\n";
+        free_data(file_in, file_out, pix_data);
         return 0;
     }
 
@@ -86,17 +94,20 @@ int main(int argc, char *argv[]) {
     fseek(file_in, 0, SEEK_END);
     if (current_pos_in_file != ftell(file_in)) {
         std::cout << "Error: file contains more data than expected\n";
+        free_data(file_in, file_out, pix_data);
         return 0;
     }
 
     fclose(file_in);
+    file_in = nullptr;
 
     // Часть 4: обработка действий
 
-    FILE *file_out = fopen(file_out_name, "wb");
+    file_out = fopen(file_out_name, "wb");
 
     if (file_out == nullptr) {
         std::cout << "Cannot open file to write: " << file_out_name << "\n";
+        free_data(file_in, file_out, pix_data);
         return 0;
     }
 
@@ -117,21 +128,20 @@ int main(int argc, char *argv[]) {
         rotate_counter_clockwise_90(file_out, char_header, width, height, max_value, k_bytes, pix_data, is_color);
     }
 
-    fclose(file_out);
-    free(pix_data);
+    free_data(file_in, file_out, pix_data);
     return 0;
 }
 
-void write_header(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value) {
+void write_header(FILE *file_out, char char_header, int width, int height, unsigned int max_value) {
     fseek(file_out, 0, SEEK_SET);
-    fprintf(file_out, "P%c\n%i %i\n%i\n", *char_header, width, height, max_value);
+    fprintf(file_out, "P%c\n%i %i\n%i\n", char_header, width, height, max_value);
 }
 
 void write_data(FILE *file_out, int k_bytes, unsigned char *pix_data) {
     fwrite(pix_data, k_bytes, 1, file_out);
 }
 
-void inversion(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data) {
+void inversion(FILE *file_out, char char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data) {
     write_header(file_out, char_header, width, height, max_value);
     for (int i = 0; i < k_bytes; ++i) {
         pix_data[i] = max_value - pix_data[i];
@@ -139,12 +149,13 @@ void inversion(FILE *file_out, const char *char_header, int width, int height, u
     write_data(file_out, k_bytes, pix_data);
 }
 
-void vertical_reflection(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value, int k_bytes, const unsigned char *pix_data, bool is_color) {
+void vertical_reflection(FILE *file_out, char char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data, bool is_color) {
     write_header(file_out, char_header, width, height, max_value);
 
     auto new_pix_data = (unsigned char *) calloc(k_bytes, 1);
     if (!new_pix_data) {
         std::cout << "Cannot allocate " << k_bytes << " bytes of memory\n";
+        free_data(nullptr, file_out, pix_data);
         exit(0);
     }
 
@@ -162,12 +173,13 @@ void vertical_reflection(FILE *file_out, const char *char_header, int width, int
     free(new_pix_data);
 }
 
-void horizontal_reflection(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value, int k_bytes, const unsigned char *pix_data, bool is_color) {
+void horizontal_reflection(FILE *file_out, char char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data, bool is_color) {
     write_header(file_out, char_header, width, height, max_value);
 
     auto new_pix_data = (unsigned char *) calloc(k_bytes, 1);
     if (!new_pix_data) {
         std::cout << "Cannot allocate " << k_bytes << " bytes of memory\n";
+        free_data(nullptr, file_out, pix_data);
         exit(0);
     }
 
@@ -192,13 +204,14 @@ void horizontal_reflection(FILE *file_out, const char *char_header, int width, i
     free(new_pix_data);
 }
 
-void rotate_counter_clockwise_90(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value, int k_bytes, const unsigned char *pix_data, bool is_color){
+void rotate_counter_clockwise_90(FILE *file_out, char char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data, bool is_color){
     // Swap height and width
     write_header(file_out, char_header, height, width, max_value);
 
     auto new_pix_data = (unsigned char *) calloc(k_bytes, 1);
     if (!new_pix_data) {
         std::cout << "Cannot allocate " << k_bytes << " bytes of memory\n";
+        free_data(nullptr, file_out, pix_data);
         exit(0);
     }
 
@@ -216,7 +229,7 @@ void rotate_counter_clockwise_90(FILE *file_out, const char *char_header, int wi
 
     } else {
         int counter = 0;
-        for (int j = width; j >= 0; --j) {
+        for (int j = width - 1; j >= 0; --j) {
             for (int i = 0; i < height; ++i) {
                 new_pix_data[counter++] = pix_data[i * width + j];
             }
@@ -227,13 +240,14 @@ void rotate_counter_clockwise_90(FILE *file_out, const char *char_header, int wi
     free(new_pix_data);
 }
 
-void rotate_clockwise_90(FILE *file_out, const char *char_header, int width, int height, unsigned int max_value, int k_bytes, const unsigned char *pix_data, bool is_color){
+void rotate_clockwise_90(FILE *file_out, char char_header, int width, int height, unsigned int max_value, int k_bytes, unsigned char *pix_data, bool is_color){
     // Swap height and width
     write_header(file_out, char_header, height, width, max_value);
 
     auto new_pix_data = (unsigned char *) calloc(k_bytes, 1);
     if (!new_pix_data) {
         std::cout << "Cannot allocate " << k_bytes << " bytes of memory\n";
+        free_data(nullptr, file_out, pix_data);
         exit(0);
     }
 
@@ -260,4 +274,10 @@ void rotate_clockwise_90(FILE *file_out, const char *char_header, int width, int
 
     write_data(file_out, k_bytes, new_pix_data);
     free(new_pix_data);
+}
+
+void free_data(FILE *file_in, FILE *file_out, unsigned char *pix_data) {
+    if (file_in) fclose(file_in);
+    if (file_out) fclose(file_out);
+    if (pix_data) free(pix_data);
 }
