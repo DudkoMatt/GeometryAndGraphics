@@ -1,7 +1,5 @@
 #include <iostream>
 
-using namespace std;
-
 void write_header(FILE *file_out, char char_header, int width, int height, unsigned int max_value);
 
 void write_data(FILE *file_out, int k_bytes, unsigned char *pix_data);
@@ -19,37 +17,6 @@ void free_data(FILE *file_out, unsigned char *pix_data);
  *
  * В данной лабороторной работе используется алгоритм Брезенхема для отрисовки линии
  *
- */
-
-
-// Тесты:
-/*
- * Справа:
- * 50 50 90 60
- *
- * Сверху:
- * 50 50 60 90
- *
- * Слева:
- * 50 50 10 60
- *
- * Снизу:
- * 50 50 60 10
- *
- *
- * ++ точки наоборот
- *
- * Справа:
- * 90 60 50 50
- *
- * Сверху:
- * 60 90 50 50
- *
- * Слева:
- * 10 60 50 50
- *
- * Снизу:
- * 60 10 50 50
  */
 
 
@@ -83,33 +50,12 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // ToDO: debug
-    for (int i = 0; i < argc; ++i) {
-        std::cout << argv[i] << '\n';
-    }
-
-    cout << "\n\n";
-    cout << file_out_name << "\n";
-    cout << width << "\n";
-    cout << height << "\n";
-    cout << x0 << "\n";
-    cout << y0 << "\n";
-    cout << x1 << "\n";
-    cout << y1 << "\n";
-
 
     // Преобразование координат:
+    // Начало координат в левом нижнем углу; вверх - ось y; вправо - ось x
 
     y1 = height - y1 - 1;
     y0 = height - y0 - 1;
-
-    // ToDO: debug
-    cout << "\n\nПреобразование:\n";
-    cout << x0 << "\n";
-    cout << y0 << "\n";
-    cout << x1 << "\n";
-    cout << y1 << "\n";
-
 
     FILE *file_out = nullptr;
     const char char_header = '5';
@@ -134,8 +80,8 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // ToDO: отдельно обработать случай точки
-
+    // Определяем, в каком секторе лежит конечная точка, относительно начальной точки
+    // В зависимости от этого вызываем модификацию функции
     int tmp_x = x1 - x0;
     int tmp_y = y0 - y1;
 
@@ -157,9 +103,9 @@ int main(int argc, char *argv[]) {
         line_along_y(pix_data, height, width, x1, y1, x0, y0);
     }
 
-    // ToDO: debug
-    pix_data[y0 * width + x0] = 127;
-    pix_data[y1 * width + x1] = 127;
+    // Отрисовка начальных точек
+    pix_data[y0 * width + x0] = 0;
+    pix_data[y1 * width + x1] = 0;
 
     write_header(file_out, char_header, width, height, 255);
     write_data(file_out, k_bytes, pix_data);
