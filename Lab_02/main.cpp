@@ -7,15 +7,15 @@ void write_data(FILE *file_out, int k_bytes, unsigned char *pix_data);
 void line_along_x(unsigned char *pix_data, int width, int x0, int y0, int x1, int y1);
 void line_along_y(unsigned char *pix_data, int height, int width, int x0, int y0, int x1, int y1);
 
-void swap(int a, int b, unsigned char *pix_data);
-void transpose(int width, int height, unsigned char *pix_data);
-
 void free_data(FILE *file_out, unsigned char *pix_data);
 
 
 /*
  *
  * В данной лабороторной работе используется алгоритм Брезенхема для отрисовки линии
+ *
+ * ToDO: сейчас часть частичного решения
+ *
  *
  */
 
@@ -155,20 +155,24 @@ void line_along_x(unsigned char *pix_data, int width, int x0, int y0, int x1, in
 
 // Ограничение: построение только в границах: y < 0; y <= x; y <= -x
 void line_along_y(unsigned char *pix_data, int height, int width, int x0, int y0, int x1, int y1) {
-    line_along_x(pix_data, width, y0, x0, y1, x1);
-    transpose(width, height, pix_data);
-}
-
-void swap(int a, int b, unsigned char *pix_data) {
-    unsigned char t = pix_data[a];
-    pix_data[a] = pix_data[b];
-    pix_data[b] = t;
-}
-
-void transpose(int width, int height, unsigned char *pix_data) {
-    for (int i = 0; i < height; ++i) {
-        for (int j = i + 1; j < width; ++j) {
-            swap(i * width + j, j * width + i, pix_data);
+    int delta_x = std::abs(x1 - x0);
+    int delta_y = std::abs(y1 - y0);
+    int error = 0;
+    int delta_err = delta_x + 1;
+    int x = x0;
+    int dir_x = x1 - x0;
+    if (dir_x > 0) {
+        dir_x = 1;
+    }
+    if (dir_x < 0) {
+        dir_x = -1;
+    }
+    for (int y = y0; y < y1; ++y) {
+        pix_data[y * width + x] = 0;
+        error += delta_err;
+        if (error >= delta_y + 1) {
+            x += dir_x;
+            error -= delta_y + 1;
         }
     }
 }
