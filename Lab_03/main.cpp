@@ -132,9 +132,27 @@ int main(int argc, char *argv[]) {
     }
 
 
+    // Читаем из файла
+    if (gradient == 0) {
+        int bytes_read = fread(pix_data, 1, k_bytes, file_in);
 
+        if (bytes_read < k_bytes) {
+            std::cout << "Can't read all data:\n";
+            std::cout << "Expected " << k_bytes << " bytes, but only " << bytes_read << " were read\n";
+            free_data(file_in, file_out, pix_data);
+            return 1;
+        }
 
-    change_bitness(bitness, width * height, pix_data);
+        long current_pos_in_file = ftell(file_in);
+        fseek(file_in, 0, SEEK_END);
+        if (current_pos_in_file != ftell(file_in)) {
+            std::cout << "Error: file contains more data than expected\n";
+            free_data(file_in, file_out, pix_data);
+            return 1;
+        }
+
+        change_bitness(bitness, width * height, pix_data);
+    }
 
 
 
