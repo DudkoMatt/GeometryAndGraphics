@@ -33,13 +33,12 @@ unsigned char change_bitness(unsigned bitness, unsigned char data) {
 void fill_vertical_line(int x, int width, int height, unsigned char color, double gamma, unsigned char *pix_data) {
     for (int i = 0; i < height; ++i) {
         draw_pix(pix_data, width, x, i, color, gamma);
-//        pix_data[x + i * width] = color;
     }
 }
 
-void no_dithering(int width, int height, unsigned char *pix_data, double gamma) {
+void no_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness) {
     for (int i = 0; i < width; ++i) {
-        fill_vertical_line(i, width, height, (unsigned char) std::round(255.0 * i / width), gamma, pix_data);
+        fill_vertical_line(i, width, height, change_bitness(bitness, (unsigned char) std::round(255.0 * i / width)), gamma, pix_data);
     }
 }
 
@@ -70,7 +69,7 @@ int main(int argc, char *argv[]) {
     unsigned bitness = argv[5][0] - '0';
 
     // ToDO: sRGB
-    double gamma = 0;
+    double gamma = 0;  // if gamma = 0, sRGB will be used
 
     if (argc == 7)
         try {
@@ -168,7 +167,7 @@ int main(int argc, char *argv[]) {
     // Основная часть программы
 
     if (dithering == 0) {
-        no_dithering(width, height, pix_data, gamma);
+        no_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 1) {
 
     } else if (dithering == 2) {
