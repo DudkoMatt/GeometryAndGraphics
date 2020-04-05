@@ -50,5 +50,11 @@ void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, 
         // ToDO: sRGB
     }
 
-    pix_data[width * y + x] = std::min(std::max(255 * ((int) std::round(_brightness)), 0), 255);
+    // ToDO: debug
+//    double _round_brightness = std::round(255 * _brightness);
+//    int _round_brightness_casted_to_int = (int) std::round(255 * _brightness);
+//    int _max = std::max((int) std::round((255 * _brightness)), 0);
+//    int _min = std::min(std::max((int) std::round((255 * _brightness)), 0), 255);
+
+    pix_data[width * y + x] = std::min(std::max((int) std::round((255 * _brightness)), 0), 255);
 }

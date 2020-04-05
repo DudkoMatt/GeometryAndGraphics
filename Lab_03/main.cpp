@@ -4,14 +4,14 @@
 
 void fill_vertical_line(int x, int width, int height, unsigned char color, unsigned char *pix_data) {
     for (int i = 0; i < height; ++i) {
-//        draw_pix(pix_data, width, x, i, color, 2.2);
-        pix_data[x + i * width] = color;
+        draw_pix(pix_data, width, x, i, color, 1);
+//        pix_data[x + i * width] = color;
     }
 }
 
 void no_dithering(int width, int height, unsigned char *pix_data) {
     for (int i = 0; i < width; ++i) {
-        fill_vertical_line(i, width, height, std::round(255.0 * i / width), pix_data);
+        fill_vertical_line(i, width, height, (unsigned char) std::round(255.0 * i / width), pix_data);
     }
 }
 
@@ -29,7 +29,7 @@ void Floyd_Steinberg_dithering() {
 
 
 int main(int argc, char *argv[]) {
-    if (argc != 7) {
+    if (argc != 7 && argc != 6) {
         std::cerr
                 << "Wrong number of arguments. Syntax:\n<lab>.exe file_in file_out gradient dithering bitness [gamma]";
         return 1;
@@ -43,14 +43,15 @@ int main(int argc, char *argv[]) {
     unsigned bitness = argv[5][0] - '0';
 
     // ToDO: sRGB
-    double gamma;
+    double gamma = 0;
 
-    try {
-        gamma = std::stod(argv[6]);
-    } catch (std::invalid_argument &e) {
-        std::cerr << "Cannot convert gamma from string to double\n";
-        return 1;
-    }
+    if (argc == 7)
+        try {
+            gamma = std::stod(argv[6]);
+        } catch (std::invalid_argument &e) {
+            std::cerr << "Cannot convert gamma from string to double\n";
+            return 1;
+        }
 
     // Если что-то пошло не так:
     if (gradient > 1 || dithering > 7 || bitness == 0 || bitness > 8 || gamma < 0) {
