@@ -45,7 +45,7 @@ void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, 
 
     // Гамма коррекция:
     if (gamma > 0) {
-        _brightness = std::pow(_brightness, 1.0 / gamma);
+        _brightness = std::pow(_brightness, gamma);
     } else {
         // ToDO: sRGB
     }

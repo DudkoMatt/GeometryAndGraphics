@@ -2,16 +2,19 @@
 #include <cmath>
 #include "write_data_pnm.h"
 
-void fill_vertical_line(int x, int width, int height, unsigned char color, unsigned char *pix_data) {
+// ToDO: debug
+#include <fstream>
+
+void fill_vertical_line(int x, int width, int height, unsigned char color, double gamma, unsigned char *pix_data) {
     for (int i = 0; i < height; ++i) {
-        draw_pix(pix_data, width, x, i, color, 1);
+        draw_pix(pix_data, width, x, i, color, gamma);
 //        pix_data[x + i * width] = color;
     }
 }
 
-void no_dithering(int width, int height, unsigned char *pix_data) {
+void no_dithering(int width, int height, unsigned char *pix_data, double gamma) {
     for (int i = 0; i < width; ++i) {
-        fill_vertical_line(i, width, height, (unsigned char) std::round(255.0 * i / width), pix_data);
+        fill_vertical_line(i, width, height, (unsigned char) std::round(255.0 * i / width), gamma, pix_data);
     }
 }
 
@@ -113,7 +116,7 @@ int main(int argc, char *argv[]) {
 
 
     // ToDO: сейчас частичное решение
-    if (gradient != 1 || dithering > 3 || gamma != 1.0) {
+    if (gradient != 1 || dithering > 3 /*|| gamma != 1.0*/) {
         std::cerr << "Only partial solution";
         free_data(file_in, file_out, pix_data);
         return 1;
@@ -123,7 +126,7 @@ int main(int argc, char *argv[]) {
     // Основная часть программы
 
     if (dithering == 0) {
-        no_dithering(width, height, pix_data);
+        no_dithering(width, height, pix_data, gamma);
     } else if (dithering == 1) {
 
     } else if (dithering == 2) {
@@ -145,6 +148,18 @@ int main(int argc, char *argv[]) {
     }
 
     write_to_file(file_out, char_header, width, height, max_value, pix_data);
+
+
+    // Debug output
+/*
+    std::ofstream out("debug.txt");
+    for (int i = 0; i < width; ++i) {
+//        if (*(pix_data + i) != *(pix_data + i + 1))
+            out << (int) *(pix_data + i) << " ";
+    }
+
+//    out << (int) *(pix_data + width - 1) << " ";
+*/
 
     free_data(file_in, file_out, pix_data);
     return 0;
