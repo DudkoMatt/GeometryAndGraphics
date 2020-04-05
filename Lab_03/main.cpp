@@ -5,6 +5,31 @@
 // ToDO: debug
 #include <fstream>
 
+
+// ToDO: обработка битности внутри основной программы
+void change_bitness(unsigned bitness, size_t k, unsigned char *pix_data) {
+    if (bitness == 8) return;
+    for (int i = 0; i < k; ++i) {
+        unsigned char tmp = *(pix_data + i) & (((1u << bitness) - 1) << (8 - bitness));
+        *(pix_data + i) = 0;
+
+        for (unsigned j = 0; j < 8 / bitness + 1; ++j) {
+            *(pix_data + j) = *(pix_data + j) | ((unsigned char) (tmp >> bitness * j));
+        }
+    }
+}
+
+unsigned char change_bitness(unsigned bitness, unsigned char data) {
+    unsigned char tmp = data & (((1u << bitness) - 1) << (8 - bitness));
+    data = 0;
+
+    for (unsigned i = 0; i < 8 / bitness + 1; ++i) {
+        data = data | ((unsigned char) (tmp >> bitness * i));
+    }
+
+    return data;
+}
+
 void fill_vertical_line(int x, int width, int height, unsigned char color, double gamma, unsigned char *pix_data) {
     for (int i = 0; i < height; ++i) {
         draw_pix(pix_data, width, x, i, color, gamma);
@@ -29,20 +54,6 @@ void random_dithering() {
 void Floyd_Steinberg_dithering() {
 
 }
-
-
-void change_bitness(unsigned bitness, size_t k, unsigned char *pix_data) {
-    if (bitness == 8) return;
-    for (int i = 0; i < k; ++i) {
-        unsigned char tmp = *(pix_data + i) & (((1u << bitness) - 1) << (8 - bitness));
-        *(pix_data + i) = 0;
-
-        for (unsigned i = 0; i < 8 / bitness + 1; ++i) {
-            *(pix_data + i) = *(pix_data + i) | (tmp >> bitness * i);
-        }
-    }
-}
-
 
 int main(int argc, char *argv[]) {
     if (argc != 7 && argc != 6) {
