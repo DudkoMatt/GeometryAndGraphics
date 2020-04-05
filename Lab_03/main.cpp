@@ -31,6 +31,19 @@ void Floyd_Steinberg_dithering() {
 }
 
 
+void change_bitness(unsigned bitness, size_t k, unsigned char *pix_data) {
+    if (bitness == 8) return;
+    for (int i = 0; i < k; ++i) {
+        unsigned char tmp = *(pix_data + i) & (((1u << bitness) - 1) << (8 - bitness));
+        *(pix_data + i) = 0;
+
+        for (unsigned i = 0; i < 8 / bitness + 1; ++i) {
+            *(pix_data + i) = *(pix_data + i) | (tmp >> bitness * i);
+        }
+    }
+}
+
+
 int main(int argc, char *argv[]) {
     if (argc != 7 && argc != 6) {
         std::cerr
@@ -110,7 +123,7 @@ int main(int argc, char *argv[]) {
 
 
 
-
+    change_bitness(bitness, width * height, pix_data);
 
 
 
