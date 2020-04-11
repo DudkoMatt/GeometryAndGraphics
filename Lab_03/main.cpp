@@ -6,6 +6,20 @@
 #include <fstream>
 
 
+const int Bayer_Matrix[8][8] = {
+        {0,  48, 12, 60, 3,  51, 15, 63},
+        {32, 16, 44, 28, 35, 19, 47, 31},
+        {8,  56, 4,  52, 11, 59, 7,  55},
+        {40, 24, 36, 20, 43, 27, 39, 23},
+        {2,  50, 14, 62, 1,  49, 13, 61},
+        {34, 18, 46, 30, 33, 17, 45, 29},
+        {10, 58, 6,  54, 9,  57, 5,  53},
+        {42, 26, 38, 22, 41, 25, 37, 21}
+};
+
+const int MATRIX_SIZE = 8;
+
+
 // ToDO: обработка битности внутри основной программы
 void change_bitness(unsigned bitness, size_t k, unsigned char *pix_data) {
     if (bitness == 8) return;
@@ -38,12 +52,104 @@ void fill_vertical_line(int x, int width, int height, unsigned char color, doubl
 
 void no_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness) {
     for (int i = 0; i < width; ++i) {
-        fill_vertical_line(i, width, height, change_bitness(bitness, (unsigned char) std::round(255.0 * i / width)), gamma, pix_data);
+        fill_vertical_line(i, width, height, change_bitness(bitness, (unsigned char) std::round(255.0 * i / width)),
+                           gamma, pix_data);
     }
 }
 
-void ordered_dithering() {
+unsigned char find_nearest_palette_color(unsigned bitness, double pix_data, double barrier_brightness) {
+    // Return color in [0..255]
 
+    if (pix_data <= barrier_brightness)
+        return 0;
+    else
+    {
+        unsigned char current_color = (unsigned char) (pix_data * 255);
+
+        while (current_color < 255 && current_color != change_bitness(bitness, current_color))
+            current_color++;
+
+        return current_color;
+    }
+
+
+//    int last_less = 0;
+//    int i = 0;
+//    for (i = 0; i <= 255; ++i) {
+//        if (change_bitness(bitness, i) < pix_data)
+//            last_less = change_bitness(bitness, i);
+//        else if (change_bitness(bitness, i) == pix_data)
+//            return change_bitness(bitness, i);
+//        else
+//            break;
+//    }
+//
+//    // last_less < pix_data < i
+//
+//    if (last_less == 255)
+//        return last_less;
+//
+//    if (pix_data - last_less < i - pix_data) {
+//        return last_less;
+//    } else
+//        return change_bitness(bitness, i);
+}
+
+
+double change_pix_gamma (double _brightness, double gamma) {
+    // Гамма коррекция:
+    if (gamma > 0) {
+        _brightness = std::pow(_brightness, gamma);
+    } else {
+        // ToDO: sRGB
+    }
+
+    return _brightness;
+}
+
+double change_pix_gamma (unsigned char pix_data, double gamma) {
+    double _brightness = pix_data / 255.0;
+
+    // Гамма коррекция:
+    if (gamma > 0) {
+        _brightness = std::pow(_brightness, gamma);
+    } else {
+        // ToDO: sRGB
+    }
+
+    return _brightness;
+}
+
+void ordered_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            // Black and white only --> no
+//            double _color = std::pow((double) x / width, gamma);
+//
+//            if (std::pow((double) x / width, gamma) > Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE] / 64.0) {
+//                *(pix_data + width * y + x) = 255;
+//            } else {
+//                *(pix_data + width * y + x) = 0;
+//            }
+
+
+            double barrier_brightness = (Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE]) / ((double) MATRIX_SIZE * MATRIX_SIZE);
+//            int barrier_brightness_digit = barrier_brightness * 255;
+
+            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+
+//            unsigned char curr_brightness_char = curr_brightness * 255;
+
+//            unsigned char _brightness = find_nearest_palette_color(bitness, curr_brightness, barrier_brightness);
+
+            draw_pix(pix_data, width, x, y,
+                         find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
+                         gamma);
+
+
+        }
+    }
 }
 
 void random_dithering() {
@@ -55,6 +161,31 @@ void Floyd_Steinberg_dithering() {
 }
 
 int main(int argc, char *argv[]) {
+
+
+// ToDO: Debug. Вывод таблицы
+/*
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            std::cout << (Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE] < 10 ? " " : "") << Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    std::cout << std::endl;std::cout << std::endl;std::cout << std::endl;
+
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            std::cout << ((Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE] + 1) /
+                          ((double) MATRIX_SIZE * MATRIX_SIZE) -
+                          0.5) << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    return 0;
+*/
+
     if (argc != 7 && argc != 6) {
         std::cerr
                 << "Wrong number of arguments. Syntax:\n<lab>.exe file_in file_out gradient dithering bitness [gamma]";
@@ -131,8 +262,21 @@ int main(int argc, char *argv[]) {
     }
 
 
-    // Читаем из файла
-    if (gradient == 0) {
+
+    // ToDO: сейчас частичное решение
+    if (gradient != 1 || dithering > 3 /*|| gamma != 1.0*/) {
+        std::cerr << "Only partial solution";
+        free_data(file_in, file_out, pix_data);
+        return 1;
+    }
+
+
+    // Основная часть программы
+
+
+/*    if (gradient == 0) {
+        // Читаем из файла
+
         int bytes_read = fread(pix_data, 1, k_bytes, file_in);
 
         if (bytes_read < k_bytes) {
@@ -151,56 +295,81 @@ int main(int argc, char *argv[]) {
         }
 
         change_bitness(bitness, width * height, pix_data);
-    }
+
+        // ToDO
+
+        if (dithering == 0) {
+            // no_dithering
+
+            // blank branch
+
+        } else if (dithering == 1) {
+            // ToDO
+            // ordered_dithering
+        } else if (dithering == 2) {
+            // ToDO
+            // random_dithering
+        } else if (dithering == 3) {
+            // ToDO
+            // Floyd_Steinberg_dithering
+        } else if (dithering == 4) {
+
+        } else if (dithering == 5) {
+
+        } else if (dithering == 6) {
+
+        } else if (dithering == 7) {
+
+        }
+
+        else {
+            std::cerr << "Not implemented for now";
+        }
 
 
+    } else {*/
 
-
-    // ToDO: сейчас частичное решение
-    if (gradient != 1 || dithering > 3 /*|| gamma != 1.0*/) {
-        std::cerr << "Only partial solution";
-        free_data(file_in, file_out, pix_data);
-        return 1;
-    }
-
-
-    // Основная часть программы
+    // Горизонтальный градиент
 
     if (dithering == 0) {
         no_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 1) {
-
+        // ToDO
+        ordered_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 2) {
-
+        // ToDO
+        random_dithering();
     } else if (dithering == 3) {
-
+        // ToDO
+        Floyd_Steinberg_dithering();
     } /*else if (dithering == 4) {
 
-    } else if (dithering == 5) {
+        } else if (dithering == 5) {
 
-    } else if (dithering == 6) {
+        } else if (dithering == 6) {
 
-    } else if (dithering == 7) {
+        } else if (dithering == 7) {
 
-    }*/
+        }*/
 
     else {
         std::cerr << "Not implemented for now";
     }
+//    }
+
+
 
     write_to_file(file_out, char_header, width, height, max_value, pix_data);
 
 
     // Debug output
-/*
-    std::ofstream out("debug.txt");
-    for (int i = 0; i < width; ++i) {
-//        if (*(pix_data + i) != *(pix_data + i + 1))
-            out << (int) *(pix_data + i) << " ";
-    }
+//    std::ofstream out("debug.txt");
+//
+//
+//    for (int i = 0; i < width * 1; ++i) {
+//        out << (int) *(pix_data + i) << " ";
+//    }
 
-//    out << (int) *(pix_data + width - 1) << " ";
-*/
 
     free_data(file_in, file_out, pix_data);
     return 0;
