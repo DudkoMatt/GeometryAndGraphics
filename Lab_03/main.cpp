@@ -378,6 +378,73 @@ void Atkinson_dithering(int width, int height, unsigned char *pix_data, double g
     }
 }
 
+void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness) {
+    std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+            unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
+
+            unsigned char nearest_palette_color = find_nearest_palette_color(bitness,
+                                                                             curr_brightness_char + errors[y][x]);
+            int err = curr_brightness_char - nearest_palette_color;
+
+            const double k = 32.0;
+            const double delta_err = err / k;
+
+            // Вправо на данной строке
+            if (x < width - 1) {
+                errors[y][x + 1] += 5 * delta_err;
+                if (x < width - 2)
+                    errors[y][x + 2] += 3 * delta_err;
+            }
+
+            // Вниз на строку
+            if (y < height - 1) {
+                // Влево на 2
+                if (x >= 2)
+                    errors[y + 1][x - 2] += 2 * delta_err;
+
+                // Влево на 1
+                if (x != 0)
+                    errors[y + 1][x - 1] += 4 * delta_err;
+
+                // Центр
+                errors[y + 1][x] += 5 * delta_err;
+
+                // Вправо на 1
+                if (x < width - 1)
+                    errors[y + 1][x + 1] += 4 * delta_err;
+
+                // Вправо на 2
+                if (x < width - 2)
+                    errors[y + 1][x + 2] += 2 * delta_err;
+
+                // Если есть строка на 2 ниже
+                if (y < height - 2) {
+                    // Влево на 1
+                    if (x != 0)
+                        errors[y + 2][x - 1] += 2 * delta_err;
+
+                    // Центр
+                    errors[y + 2][x] += 3 * delta_err;
+
+                    // Вправо на 1
+                    if (x < width - 1)
+                        errors[y + 2][x + 1] += 2 * delta_err;
+                }
+            }
+
+            draw_pix(pix_data, width, x, y,
+                     nearest_palette_color,
+                     gamma);
+
+        }
+    }
+}
+
 
 int main(int argc, char *argv[]) {
 
@@ -557,7 +624,6 @@ int main(int argc, char *argv[]) {
     } else if (dithering == 1) {
         ordered_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 2) {
-        // ToDO
         random_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 3) {
         // ToDO
@@ -566,11 +632,8 @@ int main(int argc, char *argv[]) {
         // ToDO
         Jarvis_Judice_Ninke_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 5) {
-
         // ToDO
-        std::cout << "Sierra (Sierra-3): Not implemented for now" << std::endl;
-
-
+        Sierra_3_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 6) {
         // ToDO
         Atkinson_dithering(width, height, pix_data, gamma, bitness);
@@ -580,9 +643,6 @@ int main(int argc, char *argv[]) {
         std::cout << "Halftone (4x4, orthogonal): Not implemented for now" << std::endl;
 
 
-    } else {
-        std::cerr << "Wrong argument";
-        return 1;
     }
 //    }
 
