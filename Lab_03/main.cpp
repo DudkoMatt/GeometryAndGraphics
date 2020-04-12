@@ -64,8 +64,7 @@ unsigned char find_nearest_palette_color(unsigned bitness, double pix_data, doub
 
     if (pix_data <= barrier_brightness)
         return 0;
-    else
-    {
+    else {
         unsigned char current_color = (unsigned char) (pix_data * 255);
 
         while (current_color < 255 && current_color != change_bitness(bitness, current_color))
@@ -98,7 +97,7 @@ unsigned char find_nearest_palette_color(unsigned bitness, double pix_data, doub
 }
 
 
-double change_pix_gamma (double _brightness, double gamma) {
+double change_pix_gamma(double _brightness, double gamma) {
     // Гамма коррекция:
     if (gamma > 0) {
         _brightness = std::pow(_brightness, gamma);
@@ -109,7 +108,7 @@ double change_pix_gamma (double _brightness, double gamma) {
     return _brightness;
 }
 
-double change_pix_gamma (unsigned char pix_data, double gamma) {
+double change_pix_gamma(unsigned char pix_data, double gamma) {
     double _brightness = pix_data / 255.0;
 
     // Гамма коррекция:
@@ -136,7 +135,8 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
 //            }
 
 
-            double barrier_brightness = (Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE]) / ((double) MATRIX_SIZE * MATRIX_SIZE);
+            double barrier_brightness =
+                    (Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE]) / ((double) MATRIX_SIZE * MATRIX_SIZE);
 //            int barrier_brightness_digit = barrier_brightness * 255;
 
             double curr_brightness = change_pix_gamma((double) x / width, gamma);
@@ -146,16 +146,12 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
 //            unsigned char _brightness = find_nearest_palette_color(bitness, curr_brightness, barrier_brightness);
 
             draw_pix(pix_data, width, x, y,
-                         find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
-                         gamma);
+                     find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
+                     gamma);
 
 
         }
     }
-}
-
-void random_dithering() {
-    std::cout << "Random dithering: Not implemented for now" << std::endl;
 }
 
 // Для Floyd_Steinberg_dithering
@@ -179,7 +175,7 @@ unsigned char find_nearest_palette_color(unsigned bitness, double pix_data) {
     if (last_less == 255)
         return last_less;
 
-    if (pix_data - last_less < i - pix_data) {
+    if (std::abs(pix_data - last_less) < std::abs(i - pix_data)) {
         return last_less;
     } else
         return change_bitness(bitness, i);
@@ -196,7 +192,8 @@ void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, d
             double curr_brightness = change_pix_gamma((double) x / width, gamma);
             unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
 
-            unsigned char nearest_palette_color = find_nearest_palette_color(bitness, curr_brightness_char + errors[y][x]);
+            unsigned char nearest_palette_color = find_nearest_palette_color(bitness,
+                                                                             curr_brightness_char + errors[y][x]);
             int err = curr_brightness_char - nearest_palette_color;
 
             // Вправо на данной строке
@@ -238,7 +235,8 @@ void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_dat
             double curr_brightness = change_pix_gamma((double) x / width, gamma);
             unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
 
-            unsigned char nearest_palette_color = find_nearest_palette_color(bitness, curr_brightness_char + errors[y][x]);
+            unsigned char nearest_palette_color = find_nearest_palette_color(bitness,
+                                                                             curr_brightness_char + errors[y][x]);
             int err = curr_brightness_char - nearest_palette_color;
 
             const double k = 48.0;
@@ -293,6 +291,27 @@ void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_dat
                         errors[y + 2][x + 2] += 1 * err / k;
                 }
             }
+
+            draw_pix(pix_data, width, x, y,
+                     nearest_palette_color,
+                     gamma);
+
+
+        }
+    }
+}
+
+// ToDO: Вопрос random in (0..1] или [-128 .. 128]?
+void random_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+            unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
+
+            unsigned char nearest_palette_color = find_nearest_palette_color(bitness, curr_brightness_char +
+                                                                                      (((double) std::rand() /
+                                                                                        (RAND_MAX)) * 255 - 128));
 
             draw_pix(pix_data, width, x, y,
                      nearest_palette_color,
@@ -481,14 +500,14 @@ int main(int argc, char *argv[]) {
         ordered_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 2) {
         // ToDO
-        random_dithering();
+        random_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 3) {
         // ToDO
         Floyd_Steinberg_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 4) {
         // ToDO
         Jarvis_Judice_Ninke_dithering(width, height, pix_data, gamma, bitness);
-        } /*else if (dithering == 5) {
+    } /*else if (dithering == 5) {
 
         } else if (dithering == 6) {
 
