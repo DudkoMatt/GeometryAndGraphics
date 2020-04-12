@@ -11,17 +11,25 @@
 
 
 const int Bayer_Matrix[8][8] = {
-        {0,  48, 12, 60, 3,  51, 15, 63},
+        { 0, 48, 12, 60,  3, 51, 15, 63},
         {32, 16, 44, 28, 35, 19, 47, 31},
-        {8,  56, 4,  52, 11, 59, 7,  55},
+        { 8, 56,  4, 52, 11, 59,  7, 55},
         {40, 24, 36, 20, 43, 27, 39, 23},
-        {2,  50, 14, 62, 1,  49, 13, 61},
+        { 2, 50, 14, 62,  1, 49, 13, 61},
         {34, 18, 46, 30, 33, 17, 45, 29},
-        {10, 58, 6,  54, 9,  57, 5,  53},
+        {10, 58,  6, 54,  9, 57,  5, 53},
         {42, 26, 38, 22, 41, 25, 37, 21}
 };
 
 const int MATRIX_SIZE = 8;
+
+
+const int Halftone_Matrix [4][4] = {
+        { 6, 12, 10,  3},
+        {11, 15, 13,  7},
+        { 9, 14,  5,  1},
+        { 4,  8,  2,  0}
+};
 
 
 // ToDO: обработка битности внутри основной программы
@@ -156,6 +164,25 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
         }
     }
 }
+
+
+void Halftone_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            double barrier_brightness = (Halftone_Matrix[y % 4][x % 4]) / 16.0;
+
+            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+
+            draw_pix(pix_data, width, x, y,
+                     find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
+                     gamma);
+
+
+        }
+    }
+}
+
 
 // Для Floyd_Steinberg_dithering
 unsigned char find_nearest_palette_color(unsigned bitness, double pix_data) {
@@ -638,11 +665,8 @@ int main(int argc, char *argv[]) {
         // ToDO
         Atkinson_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 7) {
-
         // ToDO
-        std::cout << "Halftone (4x4, orthogonal): Not implemented for now" << std::endl;
-
-
+        Halftone_dithering(width, height, pix_data, gamma, bitness);
     }
 //    }
 
