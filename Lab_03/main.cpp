@@ -178,7 +178,7 @@ unsigned char find_nearest_palette_color(unsigned bitness, double pix_data) {
     if (last_less == 255)
         return last_less;
 
-    if (std::abs(pix_data - last_less) < std::abs(i - pix_data)) {
+    if (std::abs(pix_data - last_less) < std::abs(change_bitness(bitness, i) - pix_data)) {
         return last_less;
     } else
         return change_bitness(bitness, i);
