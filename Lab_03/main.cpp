@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <vector>
 #include "write_data_pnm.h"
 
 // ToDO: debug
@@ -57,6 +58,7 @@ void no_dithering(int width, int height, unsigned char *pix_data, double gamma, 
     }
 }
 
+// Для ordered_dithering (8 x 8)
 unsigned char find_nearest_palette_color(unsigned bitness, double pix_data, double barrier_brightness) {
     // Return color in [0..255]
 
@@ -153,10 +155,76 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
 }
 
 void random_dithering() {
+    std::cout << "Random dithering: Not implemented for now" << std::endl;
+}
+
+// Для Floyd_Steinberg_dithering
+unsigned char find_nearest_palette_color(unsigned bitness, double pix_data) {
+
+    // pix_data in [0..255]
+
+    int last_less = 0;
+    int i = 0;
+    for (i = 0; i <= 255; ++i) {
+        if (change_bitness(bitness, i) < pix_data)
+            last_less = change_bitness(bitness, i);
+        else if (change_bitness(bitness, i) == pix_data)
+            return change_bitness(bitness, i);
+        else
+            break;
+    }
+
+    // last_less < pix_data < i
+
+    if (last_less == 255)
+        return last_less;
+
+    if (pix_data - last_less < i - pix_data) {
+        return last_less;
+    } else
+        return change_bitness(bitness, i);
 
 }
 
-void Floyd_Steinberg_dithering() {
+void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness) {
+
+    std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+            unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
+
+            unsigned char nearest_palette_color = find_nearest_palette_color(bitness, curr_brightness_char + errors[y][x]);
+            int err = curr_brightness_char - nearest_palette_color;
+
+            // Вправо на данной строке
+            if (x != width - 1) {
+                errors[y][x + 1] += 7 * err / 16.0;
+            }
+
+            // Вниз на строку
+            if (y != height - 1) {
+                // Влево
+                if (x != 0)
+                    errors[y + 1][x - 1] += 3 * err / 16.0;
+
+                // Центр
+                errors[y + 1][x] += 5 * err / 16.0;
+
+                // Вправо
+                if (x != width - 1)
+                    errors[y + 1][x + 1] += err / 16.0;
+            }
+
+            draw_pix(pix_data, width, x, y,
+                     nearest_palette_color,
+                     gamma);
+
+
+        }
+    }
 
 }
 
@@ -334,14 +402,13 @@ int main(int argc, char *argv[]) {
     if (dithering == 0) {
         no_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 1) {
-        // ToDO
         ordered_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 2) {
         // ToDO
         random_dithering();
     } else if (dithering == 3) {
         // ToDO
-        Floyd_Steinberg_dithering();
+        Floyd_Steinberg_dithering(width, height, pix_data, gamma, bitness);
     } /*else if (dithering == 4) {
 
         } else if (dithering == 5) {
