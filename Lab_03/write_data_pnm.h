@@ -16,4 +16,9 @@ void write_to_file(FILE *file_out, char char_header, int width, int height, unsi
 
 void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, double gamma);
 
+double to_sRGB(double _brightness);
+double to_sRGB(int brightness);
+double from_sRGB(double _brightness);
+double from_sRGB(int brightness);
+
 #endif //LAB_03_WRITE_DATA_PNM_H

@@ -58,3 +58,29 @@ void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, 
 
     pix_data[width * y + x] = std::min(std::max((int) std::round((255 * _brightness)), 0), 255);
 }
+
+double to_sRGB(double _brightness) {
+    if (_brightness <= 0.0031308) {
+        return 323.0 * _brightness / 25.0;
+    } else {
+        return (211 * pow(_brightness, 5.0 / 12.0) - 11) / 200.0;
+    }
+}
+
+double to_sRGB(int brightness) {
+    double _brightness = brightness / 255.0;
+    return to_sRGB(_brightness);
+}
+
+double from_sRGB(double _brightness) {
+    if (_brightness <= 0.04045) {
+        return 25.0 * _brightness / 323;
+    } else {
+        return pow((200 * _brightness + 11) / 211.0, 12.0 / 5.0);
+    }
+}
+
+double from_sRGB(int brightness) {
+    double _brightness = brightness / 255.0;
+    return from_sRGB(_brightness);
+}
