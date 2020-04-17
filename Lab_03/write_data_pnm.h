@@ -14,14 +14,14 @@ void free_data(FILE *file);
 void free_data(unsigned char *pix_data);
 void write_to_file(FILE *file_out, char char_header, int width, int height, unsigned int max_value, unsigned char *pix_data);
 
-void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, double gamma);
-
 double to_sRGB(double _brightness);
 double to_sRGB(int brightness);
 double from_sRGB(double _brightness);
 double from_sRGB(int brightness);
 
-double change_pix_gamma(double _brightness, double gamma);
-double change_pix_gamma(unsigned char pix_data, double gamma);
+double change_pix_gamma_to_print(double _brightness, double gamma);
+double change_pix_gamma_to_print(unsigned char pix_data, double gamma);
+
+void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, double gamma);
 
 #endif //LAB_03_WRITE_DATA_PNM_H

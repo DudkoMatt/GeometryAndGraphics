@@ -38,27 +38,6 @@ void write_to_file(FILE *file_out, char char_header, int width, int height, unsi
     write_data(file_out, width * height, pix_data);
 }
 
-
-// ToDO: гамма коррекция
-void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, double gamma) {
-    double _brightness = brightness / 255.0;
-
-    // Гамма коррекция:
-    if (gamma > 0) {
-        _brightness = std::pow(_brightness, 1.0 / gamma);
-    } else {
-        _brightness = from_sRGB(_brightness);
-    }
-
-    // ToDO: debug
-//    double _round_brightness = std::round(255 * _brightness);
-//    int _round_brightness_casted_to_int = (int) std::round(255 * _brightness);
-//    int _max = std::max((int) std::round((255 * _brightness)), 0);
-//    int _min = std::min(std::max((int) std::round((255 * _brightness)), 0), 255);
-
-    pix_data[width * y + x] = std::min(std::max((int) std::round((255 * _brightness)), 0), 255);
-}
-
 double to_sRGB(double _brightness) {
     if (_brightness <= 0.0031308) {
         return 323.0 * _brightness / 25.0;
@@ -85,10 +64,10 @@ double from_sRGB(int brightness) {
     return from_sRGB(_brightness);
 }
 
-double change_pix_gamma(double _brightness, double gamma) {
+double change_pix_gamma_to_print(double _brightness, double gamma) {
     // Гамма коррекция:
     if (gamma > 0) {
-        _brightness = std::pow(_brightness, 1.0 / gamma);
+        _brightness = std::pow(_brightness, gamma);
     } else {
         _brightness = from_sRGB(_brightness);
     }
@@ -96,7 +75,23 @@ double change_pix_gamma(double _brightness, double gamma) {
     return _brightness;
 }
 
-double change_pix_gamma(unsigned char pix_data, double gamma) {
+double change_pix_gamma_to_print(unsigned char pix_data, double gamma) {
     double _brightness = pix_data / 255.0;
-    return change_pix_gamma(_brightness, gamma);
+    return change_pix_gamma_to_print(_brightness, gamma);
+}
+
+// ToDO: гамма коррекция
+void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, double gamma) {
+    double _brightness = brightness / 255.0;
+
+    // Гамма коррекция:
+    change_pix_gamma_to_print(_brightness, gamma);
+
+    // ToDO: debug
+//    double _round_brightness = std::round(255 * _brightness);
+//    int _round_brightness_casted_to_int = (int) std::round(255 * _brightness);
+//    int _max = std::max((int) std::round((255 * _brightness)), 0);
+//    int _min = std::min(std::max((int) std::round((255 * _brightness)), 0), 255);
+
+    pix_data[width * y + x] = std::min(std::max((int) std::round((255 * _brightness)), 0), 255);
 }

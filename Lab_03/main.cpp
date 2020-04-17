@@ -65,7 +65,7 @@ void fill_vertical_line(int x, int width, int height, unsigned char color, doubl
 void no_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness) {
     for (int i = 0; i < width; ++i) {
         fill_vertical_line(i, width, height, change_bitness(bitness, (unsigned char) std::round(255.0 *
-                                                                                                        change_pix_gamma(
+                                                                                                        change_pix_gamma_to_print(
                                                                                                                 (double) i /
                                                                                                                 width, gamma))),
                            gamma, pix_data);
@@ -86,28 +86,6 @@ unsigned char find_nearest_palette_color(unsigned bitness, double pix_data, doub
 
         return current_color;
     }
-
-
-//    int last_less = 0;
-//    int i = 0;
-//    for (i = 0; i <= 255; ++i) {
-//        if (change_bitness(bitness, i) < pix_data)
-//            last_less = change_bitness(bitness, i);
-//        else if (change_bitness(bitness, i) == pix_data)
-//            return change_bitness(bitness, i);
-//        else
-//            break;
-//    }
-//
-//    // last_less < pix_data < i
-//
-//    if (last_less == 255)
-//        return last_less;
-//
-//    if (pix_data - last_less < i - pix_data) {
-//        return last_less;
-//    } else
-//        return change_bitness(bitness, i);
 }
 
 
@@ -115,25 +93,10 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            // Black and white only --> no
-//            double _color = std::pow((double) x / width, gamma);
-//
-//            if (std::pow((double) x / width, gamma) > Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE] / 64.0) {
-//                *(pix_data + width * y + x) = 255;
-//            } else {
-//                *(pix_data + width * y + x) = 0;
-//            }
-
-
             double barrier_brightness =
                     (Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE]) / ((double) MATRIX_SIZE * MATRIX_SIZE);
-//            int barrier_brightness_digit = barrier_brightness * 255;
 
-            double curr_brightness = change_pix_gamma((double) x / width, gamma);
-
-//            unsigned char curr_brightness_char = curr_brightness * 255;
-
-//            unsigned char _brightness = find_nearest_palette_color(bitness, curr_brightness, barrier_brightness);
+            double curr_brightness = change_pix_gamma_to_print((double) x / width, gamma);
 
             draw_pix(pix_data, width, x, y,
                      find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
@@ -151,7 +114,7 @@ void Halftone_dithering(int width, int height, unsigned char *pix_data, double g
 
             double barrier_brightness = (Halftone_Matrix[y % 4][x % 4]) / 16.0;
 
-            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+            double curr_brightness = change_pix_gamma_to_print((double) x / width, gamma);
 
             draw_pix(pix_data, width, x, y,
                      find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
@@ -198,7 +161,7 @@ void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, d
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+            double curr_brightness = change_pix_gamma_to_print((double) x / width, gamma);
             unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
 
             unsigned char nearest_palette_color = find_nearest_palette_color(bitness,
@@ -241,7 +204,7 @@ void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_dat
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+            double curr_brightness = change_pix_gamma_to_print((double) x / width, gamma);
             unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
 
             unsigned char nearest_palette_color = find_nearest_palette_color(bitness,
@@ -315,7 +278,7 @@ void random_dithering(int width, int height, unsigned char *pix_data, double gam
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+            double curr_brightness = change_pix_gamma_to_print((double) x / width, gamma);
             unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
 
             unsigned char nearest_palette_color = find_nearest_palette_color(bitness, curr_brightness_char +
@@ -338,7 +301,7 @@ void Atkinson_dithering(int width, int height, unsigned char *pix_data, double g
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+            double curr_brightness = change_pix_gamma_to_print((double) x / width, gamma);
             unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
 
             unsigned char nearest_palette_color = find_nearest_palette_color(bitness,
@@ -390,7 +353,7 @@ void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double g
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            double curr_brightness = change_pix_gamma((double) x / width, gamma);
+            double curr_brightness = change_pix_gamma_to_print((double) x / width, gamma);
             unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
 
             unsigned char nearest_palette_color = find_nearest_palette_color(bitness,
@@ -454,30 +417,6 @@ void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double g
 
 int main(int argc, char *argv[]) {
 
-
-// ToDO: Debug. Вывод таблицы
-/*
-    for (int y = 0; y < 8; ++y) {
-        for (int x = 0; x < 8; ++x) {
-            std::cout << (Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE] < 10 ? " " : "") << Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE] << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    std::cout << std::endl;std::cout << std::endl;std::cout << std::endl;
-
-    for (int y = 0; y < 8; ++y) {
-        for (int x = 0; x < 8; ++x) {
-            std::cout << ((Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE] + 1) /
-                          ((double) MATRIX_SIZE * MATRIX_SIZE) -
-                          0.5) << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    return 0;
-*/
-
     if (argc != 7 && argc != 6) {
         std::cerr
                 << "Wrong number of arguments. Syntax:\n<lab>.exe file_in file_out gradient dithering bitness [gamma]";
@@ -491,7 +430,6 @@ int main(int argc, char *argv[]) {
     unsigned dithering = argv[4][0] - '0';
     unsigned bitness = argv[5][0] - '0';
 
-    // ToDO: sRGB
     double gamma = 0;  // if gamma = 0, sRGB will be used
 
     if (argc == 7)
