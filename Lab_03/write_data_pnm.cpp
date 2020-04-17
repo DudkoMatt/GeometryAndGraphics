@@ -47,7 +47,8 @@ void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, 
     if (gamma > 0) {
         _brightness = std::pow(_brightness, gamma);
     } else {
-        // ToDO: sRGB
+        // ToDO: debug
+        _brightness = to_sRGB(_brightness);
     }
 
     // ToDO: debug
@@ -83,4 +84,28 @@ double from_sRGB(double _brightness) {
 double from_sRGB(int brightness) {
     double _brightness = brightness / 255.0;
     return from_sRGB(_brightness);
+}
+
+double change_pix_gamma(double _brightness, double gamma) {
+    // Гамма коррекция:
+    if (gamma > 0) {
+        _brightness = std::pow(_brightness, gamma);
+    } else {
+        _brightness = to_sRGB(_brightness);
+    }
+
+    return _brightness;
+}
+
+double change_pix_gamma(unsigned char pix_data, double gamma) {
+    double _brightness = pix_data / 255.0;
+
+    // Гамма коррекция:
+    if (gamma > 0) {
+        _brightness = std::pow(_brightness, gamma);
+    } else {
+        _brightness = to_sRGB(_brightness);
+    }
+
+    return _brightness;
 }

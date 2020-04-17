@@ -21,4 +21,7 @@ double to_sRGB(int brightness);
 double from_sRGB(double _brightness);
 double from_sRGB(int brightness);
 
+double change_pix_gamma(double _brightness, double gamma);
+double change_pix_gamma(unsigned char pix_data, double gamma);
+
 #endif //LAB_03_WRITE_DATA_PNM_H

@@ -62,30 +62,6 @@ void fill_vertical_line(int x, int width, int height, unsigned char color, doubl
     }
 }
 
-double change_pix_gamma(double _brightness, double gamma) {
-    // Гамма коррекция:
-    if (gamma > 0) {
-        _brightness = std::pow(_brightness, gamma);
-    } else {
-        // ToDO: sRGB
-    }
-
-    return _brightness;
-}
-
-double change_pix_gamma(unsigned char pix_data, double gamma) {
-    double _brightness = pix_data / 255.0;
-
-    // Гамма коррекция:
-    if (gamma > 0) {
-        _brightness = std::pow(_brightness, gamma);
-    } else {
-        // ToDO: sRGB
-    }
-
-    return _brightness;
-}
-
 void no_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness) {
     for (int i = 0; i < width; ++i) {
         fill_vertical_line(i, width, height, change_bitness(bitness, (unsigned char) std::round(255.0 *
