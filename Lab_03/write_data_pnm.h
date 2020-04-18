@@ -22,6 +22,10 @@ double from_sRGB(int brightness);
 double change_pix_gamma_to_print(double _brightness, double gamma);
 double change_pix_gamma_to_print(unsigned char pix_data, double gamma);
 
+double change_pix_gamma_from_file(double _brightness, double gamma);
+double change_pix_gamma_from_file(unsigned char pix_data, double gamma);
+
 void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, double gamma);
+void draw_pix(unsigned char *pix_data, int width, int x, int y, double _brightness, double gamma);
 
 #endif //LAB_03_WRITE_DATA_PNM_H
