@@ -5,8 +5,9 @@
 
 
 #define DEBUG
-#define ONLY_FLOYD
-
+//#define ONLY_FLOYD
+//#define FILE_OUTPUT
+#define ENABLE_FILE_INPUT
 
 // ToDO: debug
 #ifdef FILE_OUTPUT
@@ -137,6 +138,7 @@ void Halftone_dithering(int width, int height, unsigned char *pix_data, double g
 #endif
 
 // Для Floyd_Steinberg_dithering
+// ToDO: сделать более быстрым подбор
 unsigned char find_nearest_palette_color(unsigned bitness, double pix_data) {
 
     // pix_data in [0..255]
@@ -164,7 +166,6 @@ unsigned char find_nearest_palette_color(unsigned bitness, double pix_data) {
 
 }
 
-// ToDO: Не работает так, как надо
 void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
 
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
@@ -175,7 +176,7 @@ void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, d
 #ifdef ENABLE_FILE_INPUT
 
             double curr_brightness = change_pix_gamma_to_print(get_pix_color(x, y, width, pix_data_input, errors[y][x]), gamma);
-            unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
+            unsigned char curr_brightness_char = std::min(std::max((int) (curr_brightness * 255), 0), 255);
 
 #else
 
@@ -225,7 +226,7 @@ void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_dat
         for (int x = 0; x < width; ++x) {
 
             double curr_brightness = change_pix_gamma_to_print(get_pix_color(x, y, width, pix_data_input, errors[y][x]), gamma);
-            unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
+            unsigned char curr_brightness_char = std::min(std::max((int) (curr_brightness * 255), 0), 255);
 
             unsigned char nearest_palette_color = find_nearest_palette_color(bitness,
                                                                              curr_brightness_char);
@@ -299,7 +300,7 @@ void random_dithering(int width, int height, unsigned char *pix_data, double gam
         for (int x = 0; x < width; ++x) {
 
             double curr_brightness = change_pix_gamma_to_print(get_pix_color(x, y, width, pix_data_input, 0), gamma);
-            unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
+            unsigned char curr_brightness_char = std::min(std::max((int) (curr_brightness * 255), 0), 255);
 
             unsigned char nearest_palette_color = find_nearest_palette_color(bitness, curr_brightness_char +
                                                                                       (((double) std::rand() /
@@ -322,7 +323,7 @@ void Atkinson_dithering(int width, int height, unsigned char *pix_data, double g
         for (int x = 0; x < width; ++x) {
 
             double curr_brightness = change_pix_gamma_to_print(get_pix_color(x, y, width, pix_data_input, errors[y][x]), gamma);
-            unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
+            unsigned char curr_brightness_char = std::min(std::max((int) (curr_brightness * 255), 0), 255);
 
             unsigned char nearest_palette_color = find_nearest_palette_color(bitness,
                                                                              curr_brightness_char);
@@ -375,7 +376,7 @@ void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double g
         for (int x = 0; x < width; ++x) {
 
             double curr_brightness = change_pix_gamma_to_print(get_pix_color(x, y, width, pix_data_input, errors[y][x]), gamma);
-            unsigned char curr_brightness_char = (unsigned char) (curr_brightness * 255);
+            unsigned char curr_brightness_char = std::min(std::max((int) (curr_brightness * 255), 0), 255);
 
             unsigned char nearest_palette_color = find_nearest_palette_color(bitness,
                                                                              curr_brightness_char);
