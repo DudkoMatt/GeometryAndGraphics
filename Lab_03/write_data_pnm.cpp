@@ -64,6 +64,7 @@ double from_sRGB(int brightness) {
     return from_sRGB(_brightness);
 }
 
+// ToDO: неправильно работает гамма коррекция
 double change_pix_gamma_to_print(double _brightness, double gamma) {
     // Гамма коррекция:
     if (gamma > 0) {
