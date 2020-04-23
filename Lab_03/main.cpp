@@ -5,7 +5,6 @@
 
 
 #define DEBUG
-//#define ONLY_FLOYD
 //#define FILE_OUTPUT
 #define ENABLE_FILE_INPUT
 
@@ -99,7 +98,6 @@ unsigned char find_nearest_palette_color(unsigned bitness, double pix_data, doub
     }
 }
 
-#ifndef ONLY_FLOYD
 void ordered_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -107,7 +105,7 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
             double barrier_brightness =
                     (Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE]) / ((double) MATRIX_SIZE * MATRIX_SIZE);
 
-            double curr_brightness = change_pix_gamma_to_print(get_pix_color(x, y, width, pix_data_input, 0), gamma);
+            double curr_brightness = change_pix_gamma_to_print(std::min(1.0, std::max(0.0, get_pix_color(x, y, width, pix_data_input, 0) + barrier_brightness - 0.5)), gamma);
 
             draw_pix(pix_data, width, x, y,
                      find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
@@ -135,7 +133,6 @@ void Halftone_dithering(int width, int height, unsigned char *pix_data, double g
         }
     }
 }
-#endif
 
 // Для Floyd_Steinberg_dithering
 // ToDO: сделать более быстрым подбор
@@ -217,7 +214,6 @@ void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, d
 
 }
 
-#ifndef ONLY_FLOYD
 // ToDO:
 void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
@@ -435,7 +431,6 @@ void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double g
         }
     }
 }
-#endif
 
 int main(int argc, char *argv[]) {
 
@@ -535,11 +530,6 @@ int main(int argc, char *argv[]) {
     }
 #endif
 
-#ifdef ONLY_FLOYD
-    if (dithering != 3)
-        std::cout << "Only floyd";
-#endif
-
 #ifdef ENABLE_FILE_INPUT
 
     if (gradient == 0) {
@@ -606,20 +596,15 @@ int main(int argc, char *argv[]) {
     } else {
 #endif
         // Горизонтальный градиент
-#ifndef ONLY_FLOYD
         if (dithering == 0) {
             no_dithering(width, height, pix_data, gamma, bitness);
         } else if (dithering == 1) {
             ordered_dithering(width, height, pix_data, gamma, bitness);
         } else if (dithering == 2) {
             random_dithering(width, height, pix_data, gamma, bitness);
-        } else
-#endif
-            if (dithering == 3) {
+        } else if (dithering == 3) {
             Floyd_Steinberg_dithering(width, height, pix_data, gamma, bitness);
-        }
-#ifndef ONLY_FLOYD
-            else if (dithering == 4) {
+        } else if (dithering == 4) {
             Jarvis_Judice_Ninke_dithering(width, height, pix_data, gamma, bitness);
         } else if (dithering == 5) {
             Sierra_3_dithering(width, height, pix_data, gamma, bitness);
@@ -628,7 +613,6 @@ int main(int argc, char *argv[]) {
         } else if (dithering == 7) {
             Halftone_dithering(width, height, pix_data, gamma, bitness);
         }
-#endif
 #ifdef ENABLE_FILE_INPUT
     }
 #endif
