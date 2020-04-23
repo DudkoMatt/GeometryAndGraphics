@@ -571,10 +571,10 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        change_bitness(bitness, width * height, input_pix_data);
-
         if (dithering == 0) {
             // no_dithering
+
+            change_bitness(bitness, width * height, input_pix_data);
 
             for (int y = 0; y < height; ++y) {
                 for (int x = 0; x < width; ++x) {
