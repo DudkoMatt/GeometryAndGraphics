@@ -38,7 +38,8 @@ const int Halftone_Matrix[4][4] = {
 double get_pix_color(int x, int y, int width, const unsigned char *pix_data, double error) {
     if (pix_data == nullptr) {
         // Горизонтальный градиент
-        return (double) x / width + error / 255.0;
+        // x in [0 .. width - 1]
+        return (double) x / (width - 1) + error / 255.0;
     } else {
         return (*(pix_data + y * width + x) + error) / 255.0;
     }
@@ -178,7 +179,7 @@ void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, d
 
 #else
 
-            unsigned char curr_brightness_char = (unsigned char) (x * 255.0 / width + errors[y][x]);
+            unsigned char curr_brightness_char = std::max(std::min((int) (x * 255.0 / (width - 1) + errors[y][x]), 255), 0);
 
 #endif
 
