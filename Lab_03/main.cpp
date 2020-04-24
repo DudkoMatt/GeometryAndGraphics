@@ -2,7 +2,8 @@
 #include <cmath>
 #include <vector>
 #include "write_data_pnm.h"
-
+#include <algorithm>
+#include <string>
 
 #define DEBUG
 //#define FILE_OUTPUT
@@ -98,6 +99,7 @@ unsigned char find_nearest_palette_color(unsigned bitness, double pix_data, doub
     }
 }
 
+// ToDO: исправить ошибку
 void ordered_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -105,7 +107,9 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
             double barrier_brightness =
                     (Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE]) / ((double) MATRIX_SIZE * MATRIX_SIZE);
 
-            double curr_brightness = change_pix_gamma_to_print(std::min(1.0, std::max(0.0, get_pix_color(x, y, width, pix_data_input, 0) + barrier_brightness - 0.5)), gamma);
+            double curr_brightness = change_pix_gamma_to_print(std::min(1.0, std::max(0.0,
+                    get_pix_color(x, y, width, pix_data_input, 0) + (barrier_brightness - 0.5) * (256u >> bitness) / (2.0 * 256)
+            )), gamma);
 
             draw_pix(pix_data, width, x, y,
                      find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
@@ -214,7 +218,6 @@ void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, d
 
 }
 
-// ToDO:
 void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
 
@@ -311,7 +314,6 @@ void random_dithering(int width, int height, unsigned char *pix_data, double gam
     }
 }
 
-// ToDO:
 void Atkinson_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
 
@@ -364,7 +366,6 @@ void Atkinson_dithering(int width, int height, unsigned char *pix_data, double g
     }
 }
 
-// ToDO:
 void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
 
