@@ -6,6 +6,7 @@
 #define LAB_03_WRITE_DATA_PNM_H
 
 #include <iostream>
+
 void write_header(FILE *file_out, char char_header, int width, int height, unsigned int max_value);
 void write_data(FILE *file_out, int k_bytes, unsigned char *pix_data);
 void free_data(FILE *file_in, FILE *file_out, unsigned char *pix_data);

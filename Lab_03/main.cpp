@@ -8,7 +8,7 @@
 //#define FILE_OUTPUT
 #define ENABLE_FILE_INPUT
 
-// ToDO: debug
+// Debug output
 #ifdef FILE_OUTPUT
 #include <fstream>
 #endif
@@ -372,20 +372,6 @@ find_nearest_palette_color(unsigned bitness, unsigned char current_color, unsign
         return calc_value(_pattern, bitness);
     }
 }
-
-// Previous version
-/*unsigned char find_nearest_palette_color(unsigned bitness, unsigned char current_color, unsigned char barrier_brightness) {
-    // Return color in [0..255]
-
-    if (current_color <= barrier_brightness)
-        return 0;
-    else {
-        while (current_color < 255 && current_color != change_bitness(bitness, current_color))
-            current_color++;
-
-        return current_color;
-    }
-}*/
 
 void Halftone_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness,
                         unsigned char *pix_data_input = nullptr) {
