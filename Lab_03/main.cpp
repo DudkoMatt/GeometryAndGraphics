@@ -26,14 +26,6 @@ const double Bayer_Matrix_double[8][8] = {
 
 const int MATRIX_SIZE = 8;
 
-
-/*const int Halftone_Matrix[4][4] = {
-        {6,  12, 10, 3},
-        {11, 15, 13, 7},
-        {9,  14, 5,  1},
-        {4,  8,  2,  0}
-};*/
-
 const double Halftone_Matrix_double[4][4] = {
         {0.375,  0.75,   0.625,  0.1875},
         {0.6875, 0.9375, 0.8125, 0.4375},

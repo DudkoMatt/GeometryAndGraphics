@@ -69,7 +69,6 @@ double from_sRGB(int brightness) {
     return from_sRGB(_brightness);
 }
 
-// ToDO: неправильно работает гамма коррекция
 double change_pix_gamma_to_print(double _brightness, double gamma) {
     // Гамма коррекция:
     if (gamma > 0) {
@@ -107,18 +106,12 @@ void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, 
     // Гамма коррекция:
     change_pix_gamma_to_print(_brightness, gamma);
 
-    // ToDO: debug
-//    double _round_brightness = std::round(255 * _brightness);
-//    int _round_brightness_casted_to_int = (int) std::round(255 * _brightness);
-//    int _max = std::max((int) std::round((255 * _brightness)), 0);
-//    int _min = std::min(std::max((int) std::round((255 * _brightness)), 0), 255);
-
-    pix_data[width * y + x] = std::min(std::max((int) std::round((255 * _brightness)), 0), 255);
+    pix_data[width * y + x] = limit_brightness(255 * _brightness);
 }
 
 void draw_pix(unsigned char *pix_data, int width, int x, int y, double _brightness, double gamma) {
     change_pix_gamma_to_print(_brightness, gamma);
-    pix_data[width * y + x] = limit_brightness((255 * _brightness));
+    pix_data[width * y + x] = limit_brightness(255 * _brightness);
 }
 
 void decode_gamma_from_file(unsigned char *pix_data, int k, double gamma) {
