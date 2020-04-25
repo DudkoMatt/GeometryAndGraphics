@@ -125,6 +125,45 @@ void random_dithering(int width, int height, unsigned char *pix_data, double gam
     }
 }
 
+void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+    std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            unsigned char curr_brightness_char = limit_brightness(get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+            unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
+            int err = curr_brightness_char - nearest_palette_color;
+
+            // Вправо на данной строке
+            if (x != width - 1) {
+                errors[y][x + 1] += 7 * err / 16.0;
+            }
+
+            // Вниз на строку
+            if (y != height - 1) {
+                // Влево
+                if (x != 0)
+                    errors[y + 1][x - 1] += 3 * err / 16.0;
+
+                // Центр
+                errors[y + 1][x] += 5 * err / 16.0;
+
+                // Вправо
+                if (x != width - 1)
+                    errors[y + 1][x + 1] += err / 16.0;
+            }
+
+            draw_pix(pix_data, width, x, y,
+                     nearest_palette_color,
+                     gamma);
+
+
+        }
+    }
+
+}
+
 void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
 
@@ -398,7 +437,7 @@ int main(int argc, char *argv[]) {
     } else if (dithering == 2) {
         random_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 3) {
-//        Floyd_Steinberg_dithering(width, height, pix_data, gamma, bitness);
+        Floyd_Steinberg_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 4) {
 //        Jarvis_Judice_Ninke_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 5) {
