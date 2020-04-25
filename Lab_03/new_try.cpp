@@ -164,6 +164,78 @@ void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, d
 
 }
 
+void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+    std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            unsigned char curr_brightness_char = limit_brightness(get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+            unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
+            int err = curr_brightness_char - nearest_palette_color;
+
+            const double k = 48.0;
+
+            // Вправо на данной строке
+            if (x < width - 1) {
+                errors[y][x + 1] += 7 * err / k;
+                if (x < width - 2)
+                    errors[y][x + 2] += 5 * err / k;
+            }
+
+            // Вниз на строку
+            if (y < height - 1) {
+                // Влево на 2
+                if (x >= 2)
+                    errors[y + 1][x - 2] += 3 * err / k;
+
+                // Влево на 1
+                if (x != 0)
+                    errors[y + 1][x - 1] += 5 * err / k;
+
+                // Центр
+                errors[y + 1][x] += 7 * err / k;
+
+                // Вправо на 1
+                if (x < width - 1)
+                    errors[y + 1][x + 1] += 5 * err / k;
+
+                // Вправо на 2
+                if (x < width - 2)
+                    errors[y + 1][x + 2] += 3 * err / k;
+
+                // Если есть строка на 2 ниже
+                if (y < height - 2) {
+                    // Влево на 2
+                    if (x >= 2)
+                        errors[y + 2][x - 2] += 1 * err / k;
+
+                    // Влево на 1
+                    if (x != 0)
+                        errors[y + 2][x - 1] += 3 * err / k;
+
+                    // Центр
+                    errors[y + 2][x] += 5 * err / k;
+
+                    // Вправо на 1
+                    if (x < width - 1)
+                        errors[y + 2][x + 1] += 3 * err / k;
+
+                    // Вправо на 2
+                    if (x < width - 2)
+                        errors[y + 2][x + 2] += 1 * err / k;
+                }
+            }
+
+            draw_pix(pix_data, width, x, y,
+                     nearest_palette_color,
+                     gamma);
+
+
+        }
+    }
+}
+
 void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
 
@@ -439,7 +511,7 @@ int main(int argc, char *argv[]) {
     } else if (dithering == 3) {
         Floyd_Steinberg_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 4) {
-//        Jarvis_Judice_Ninke_dithering(width, height, pix_data, gamma, bitness);
+        Jarvis_Judice_Ninke_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 5) {
         Sierra_3_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 6) {
