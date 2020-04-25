@@ -529,10 +529,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        // ToDO:
-        //  Decode gamma
-
-
+        decode_gamma_from_file(input_pix_data, width * height, gamma);
 
         if (dithering == 0) {
             // no_dithering

@@ -30,4 +30,6 @@ double change_pix_gamma_from_file(unsigned char pix_data, double gamma);
 void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, double gamma);
 void draw_pix(unsigned char *pix_data, int width, int x, int y, double _brightness, double gamma);
 
+void decode_gamma_from_file(unsigned char *pix_data, int k, double gamma);
+
 #endif //LAB_03_WRITE_DATA_PNM_H
