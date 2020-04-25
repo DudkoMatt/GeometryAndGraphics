@@ -38,6 +38,11 @@ void write_to_file(FILE *file_out, char char_header, int width, int height, unsi
     write_data(file_out, width * height, pix_data);
 }
 
+// brightness in [0..255] scale
+unsigned char limit_brightness(double brightness) {
+    return (unsigned char) std::min(255.0, std::max(0.0, brightness));
+}
+
 double to_sRGB(double _brightness) {
     if (_brightness <= 0.0031308) {
         return 323.0 * _brightness / 25.0;

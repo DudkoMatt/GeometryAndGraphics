@@ -90,11 +90,6 @@ void no_dithering(int width, int height, unsigned char *pix_data, double gamma, 
     }
 }
 
-// brightness in [0..255] scale
-unsigned char limit_brightness(double brightness) {
-    return (unsigned char) std::min(255.0, std::max(0.0, brightness));
-}
-
 void ordered_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness,
                        unsigned char *pix_data_input = nullptr) {
     for (int y = 0; y < height; ++y) {
@@ -533,6 +528,11 @@ int main(int argc, char *argv[]) {
             free(input_pix_data);
             return 1;
         }
+
+        // ToDO:
+        //  Decode gamma
+
+
 
         if (dithering == 0) {
             // no_dithering
