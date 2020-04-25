@@ -407,7 +407,7 @@ int main(int argc, char *argv[]) {
 
     if (argc != 7 && argc != 6) {
         std::cerr
-                << "Wrong number of arguments. Syntax:\n<lab>.exe file_in file_out gradient dithering bitness [gamma]";
+                << "Wrong number of arguments. Syntax:\n<lab>.exe file_in file_out gradient dithering bitness [gamma]\n";
         return 1;
     }
 

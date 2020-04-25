@@ -43,24 +43,11 @@ unsigned char limit_brightness(double brightness) {
     return (unsigned char) std::min(255.0, std::max(0.0, brightness));
 }
 
-double to_sRGB(double _brightness) {
+double from_sRGB(double _brightness) {
     if (_brightness <= 0.0031308) {
         return 323.0 * _brightness / 25.0;
     } else {
         return (211 * pow(_brightness, 5.0 / 12.0) - 11) / 200.0;
-    }
-}
-
-double to_sRGB(int brightness) {
-    double _brightness = brightness / 255.0;
-    return to_sRGB(_brightness);
-}
-
-double from_sRGB(double _brightness) {
-    if (_brightness <= 0.04045) {
-        return 25.0 * _brightness / 323;
-    } else {
-        return pow((200 * _brightness + 11) / 211.0, 12.0 / 5.0);
     }
 }
 
@@ -69,10 +56,23 @@ double from_sRGB(int brightness) {
     return from_sRGB(_brightness);
 }
 
+double to_sRGB(double _brightness) {
+    if (_brightness <= 0.04045) {
+        return 25.0 * _brightness / 323;
+    } else {
+        return pow((200 * _brightness + 11) / 211.0, 12.0 / 5.0);
+    }
+}
+
+double to_sRGB(int brightness) {
+    double _brightness = brightness / 255.0;
+    return to_sRGB(_brightness);
+}
+
 double change_pix_gamma_to_print(double _brightness, double gamma) {
     // Гамма коррекция:
     if (gamma > 0) {
-        _brightness = std::pow(_brightness, gamma);
+        _brightness = std::pow(_brightness, 1.0 / gamma);
     } else {
         _brightness = from_sRGB(_brightness);
     }
@@ -87,7 +87,7 @@ double change_pix_gamma_to_print(unsigned char pix_data, double gamma) {
 
 double change_pix_gamma_from_file(double _brightness, double gamma) {
     if (gamma > 0) {
-        _brightness = std::pow(_brightness, 1.0 / gamma);
+        _brightness = std::pow(_brightness, gamma);
     } else {
         _brightness = to_sRGB(_brightness);
     }
