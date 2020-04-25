@@ -14,31 +14,31 @@
 #endif
 
 const double Bayer_Matrix_double[8][8] = {
-        {-0.5, 0.25, -0.3125, 0.4375, -0.453125, 0.296875, -0.265625, 0.484375},
-        {0.0, -0.25, 0.1875, -0.0625, 0.046875, -0.203125, 0.234375, -0.015625},
-        {-0.375, 0.375, -0.4375, 0.3125, -0.328125, 0.421875, -0.390625, 0.359375},
-        {0.125, -0.125, 0.0625, -0.1875, 0.171875, -0.078125, 0.109375, -0.140625},
-        {-0.46875, 0.28125, -0.28125, 0.46875, -0.484375, 0.265625, -0.296875, 0.453125},
-        {0.03125, -0.21875, 0.21875, -0.03125, 0.015625, -0.234375, 0.203125, -0.046875},
-        {-0.34375, 0.40625, -0.40625, 0.34375, -0.359375, 0.390625, -0.421875, 0.328125},
-        {0.15625, -0.09375, 0.09375, -0.15625, 0.140625, -0.109375, 0.078125, -0.171875}
+        {-0.5,     0.25,     -0.3125,  0.4375,   -0.453125, 0.296875,  -0.265625, 0.484375},
+        {0.0,      -0.25,    0.1875,   -0.0625,  0.046875,  -0.203125, 0.234375,  -0.015625},
+        {-0.375,   0.375,    -0.4375,  0.3125,   -0.328125, 0.421875,  -0.390625, 0.359375},
+        {0.125,    -0.125,   0.0625,   -0.1875,  0.171875,  -0.078125, 0.109375,  -0.140625},
+        {-0.46875, 0.28125,  -0.28125, 0.46875,  -0.484375, 0.265625,  -0.296875, 0.453125},
+        {0.03125,  -0.21875, 0.21875,  -0.03125, 0.015625,  -0.234375, 0.203125,  -0.046875},
+        {-0.34375, 0.40625,  -0.40625, 0.34375,  -0.359375, 0.390625,  -0.421875, 0.328125},
+        {0.15625,  -0.09375, 0.09375,  -0.15625, 0.140625,  -0.109375, 0.078125,  -0.171875}
 };
 
 const int MATRIX_SIZE = 8;
 
 
-//const int Halftone_Matrix[4][4] = {
-//        {6,  12, 10, 3},
-//        {11, 15, 13, 7},
-//        {9,  14, 5,  1},
-//        {4,  8,  2,  0}
-//};
+/*const int Halftone_Matrix[4][4] = {
+        {6,  12, 10, 3},
+        {11, 15, 13, 7},
+        {9,  14, 5,  1},
+        {4,  8,  2,  0}
+};*/
 
 const double Halftone_Matrix_double[4][4] = {
-        {0.375, 0.75, 0.625, 0.1875},
+        {0.375,  0.75,   0.625,  0.1875},
         {0.6875, 0.9375, 0.8125, 0.4375},
-        {0.5625, 0.875, 0.3125, 0.0625},
-        {0.25, 0.5, 0.125, 0.0}
+        {0.5625, 0.875,  0.3125, 0.0625},
+        {0.25,   0.5,    0.125,  0.0}
 };
 
 
@@ -95,7 +95,8 @@ unsigned char limit_brightness(double brightness) {
     return (unsigned char) std::min(255.0, std::max(0.0, brightness));
 }
 
-void ordered_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+void ordered_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness,
+                       unsigned char *pix_data_input = nullptr) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
@@ -114,7 +115,8 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
     }
 }
 
-void random_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+void random_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness,
+                      unsigned char *pix_data_input = nullptr) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
@@ -122,7 +124,8 @@ void random_dithering(int width, int height, unsigned char *pix_data, double gam
             unsigned char nearest_palette_color;
 
             nearest_palette_color = change_bitness(bitness,
-                                                   limit_brightness(curr_brightness_char + (((double) std::rand() / (RAND_MAX)) * 255 - 128)));
+                                                   limit_brightness(curr_brightness_char +
+                                                                    (((double) std::rand() / (RAND_MAX)) * 255 - 128)));
 
             draw_pix(pix_data, width, x, y,
                      nearest_palette_color,
@@ -132,13 +135,15 @@ void random_dithering(int width, int height, unsigned char *pix_data, double gam
     }
 }
 
-void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness,
+                               unsigned char *pix_data_input = nullptr) {
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            unsigned char curr_brightness_char = limit_brightness(get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+            unsigned char curr_brightness_char = limit_brightness(
+                    get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
             unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
             int err = curr_brightness_char - nearest_palette_color;
 
@@ -171,13 +176,15 @@ void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, d
 
 }
 
-void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness,
+                                   unsigned char *pix_data_input = nullptr) {
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            unsigned char curr_brightness_char = limit_brightness(get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+            unsigned char curr_brightness_char = limit_brightness(
+                    get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
             unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
             int err = curr_brightness_char - nearest_palette_color;
 
@@ -243,13 +250,15 @@ void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_dat
     }
 }
 
-void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness,
+                        unsigned char *pix_data_input = nullptr) {
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            unsigned char curr_brightness_char = limit_brightness(get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+            unsigned char curr_brightness_char = limit_brightness(
+                    get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
             unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
             int err = curr_brightness_char - nearest_palette_color;
 
@@ -307,13 +316,15 @@ void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double g
     }
 }
 
-void Atkinson_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+void Atkinson_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness,
+                        unsigned char *pix_data_input = nullptr) {
     std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            unsigned char curr_brightness_char = limit_brightness(get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+            unsigned char curr_brightness_char = limit_brightness(
+                    get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
             unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
             int err = curr_brightness_char - nearest_palette_color;
 
@@ -360,7 +371,8 @@ unsigned char calc_value(unsigned char pattern, unsigned bitness) {
     return change_bitness(bitness, pattern << (8 - bitness));
 }
 
-unsigned char find_nearest_palette_color(unsigned bitness, unsigned char current_color, unsigned char barrier_brightness) {
+unsigned char
+find_nearest_palette_color(unsigned bitness, unsigned char current_color, unsigned char barrier_brightness) {
     // Return color in [0..255]
 
     if (current_color <= barrier_brightness)
@@ -388,16 +400,10 @@ unsigned char find_nearest_palette_color(unsigned bitness, unsigned char current
     }
 }*/
 
-void Halftone_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+void Halftone_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness,
+                        unsigned char *pix_data_input = nullptr) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-
-            // ToDO: debug
-//            unsigned char data = get_pix_color(x, y, width, pix_data_input);
-//            unsigned char brightness = find_nearest_palette_color(bitness,
-//                                                                  get_pix_color(x, y, width, pix_data_input),
-//                                                                  (unsigned char) (255 * Halftone_Matrix_double[y % 4][x % 4]));
-//            auto barrier = (unsigned char) (255 * Halftone_Matrix_double[y % 4][x % 4]);
 
             draw_pix(pix_data, width, x, y,
                      find_nearest_palette_color(bitness,
