@@ -112,6 +112,25 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
     }
 }
 
+void random_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            unsigned char curr_brightness_char = get_pix_color(x, y, width, pix_data_input);
+            unsigned char nearest_palette_color;
+
+            nearest_palette_color = change_bitness(bitness,
+                    limit_brightness(curr_brightness_char + (((double) std::rand() / (RAND_MAX)) * 255 - 128)));
+
+            draw_pix(pix_data, width, x, y,
+                     nearest_palette_color,
+                     gamma);
+
+
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     if (argc != 7 && argc != 6) {
@@ -269,11 +288,12 @@ int main(int argc, char *argv[]) {
         no_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 1) {
         ordered_dithering(width, height, pix_data, gamma, bitness);
-    }
-#ifndef FIRST_METHODS
-    else if (dithering == 2) {
+    } else if (dithering == 2) {
         random_dithering(width, height, pix_data, gamma, bitness);
-    } else if (dithering == 3) {
+    }
+
+#ifndef FIRST_METHODS
+    else if (dithering == 3) {
         Floyd_Steinberg_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 4) {
         Jarvis_Judice_Ninke_dithering(width, height, pix_data, gamma, bitness);
