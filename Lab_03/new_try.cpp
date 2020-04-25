@@ -5,25 +5,14 @@
 #include <algorithm>
 #include <string>
 
-//#define FILE_OUTPUT
+#define FILE_OUTPUT
 //#define ENABLE_FILE_INPUT
-#define ONLY_ORDERED
+#define FIRST_METHODS
 
 // ToDO: debug
 #ifdef FILE_OUTPUT
 #include <fstream>
 #endif
-
-//const int Bayer_Matrix[8][8] = {
-//        {0,  48, 12, 60, 3,  51, 15, 63},
-//        {32, 16, 44, 28, 35, 19, 47, 31},
-//        {8,  56, 4,  52, 11, 59, 7,  55},
-//        {40, 24, 36, 20, 43, 27, 39, 23},
-//        {2,  50, 14, 62, 1,  49, 13, 61},
-//        {34, 18, 46, 30, 33, 17, 45, 29},
-//        {10, 58, 6,  54, 9,  57, 5,  53},
-//        {42, 26, 38, 22, 41, 25, 37, 21}
-//};
 
 const double Bayer_Matrix_double[8][8] = {
         {-0.5, 0.25, -0.3125, 0.4375, -0.453125, 0.296875, -0.265625, 0.484375},
@@ -95,6 +84,15 @@ void no_dithering(int width, int height, unsigned char *pix_data, double gamma, 
     }
 }
 
+// brightness in [0..255] scale
+unsigned char limit_brightness(double brightness) {
+    return (unsigned char) std::min(255.0, std::max(0.0, brightness));
+}
+
+unsigned char limit_brightness(unsigned char brightness) {
+    return std::min((unsigned char) 255u, std::max((unsigned char) 0u, brightness));
+}
+
 void ordered_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -104,7 +102,7 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
             draw_pix(pix_data, width, x, y,
                      change_bitness(bitness, (unsigned char)
 
-                             std::min(255.0, std::max(0.0, (get_pix_color(x, y, width, pix_data_input) + barrier_brightness * 255)))
+                             limit_brightness(get_pix_color(x, y, width, pix_data_input) + barrier_brightness * 255)
 
                      ),
                      gamma);
@@ -272,7 +270,7 @@ int main(int argc, char *argv[]) {
     } else if (dithering == 1) {
         ordered_dithering(width, height, pix_data, gamma, bitness);
     }
-#ifndef ONLY_ORDERED
+#ifndef FIRST_METHODS
     else if (dithering == 2) {
         random_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 3) {
