@@ -7,7 +7,6 @@
 
 #define FILE_OUTPUT
 //#define ENABLE_FILE_INPUT
-#define FIRST_METHODS
 
 // ToDO: debug
 #ifdef FILE_OUTPUT
@@ -122,6 +121,69 @@ void random_dithering(int width, int height, unsigned char *pix_data, double gam
                      nearest_palette_color,
                      gamma);
 
+        }
+    }
+}
+
+void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+    std::vector<std::vector<double>> errors = std::vector<std::vector<double>>(height, std::vector<double>(width, 0));
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            
+            unsigned char curr_brightness_char = limit_brightness(get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+            unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
+            int err = curr_brightness_char - nearest_palette_color;
+
+            const double k = 32.0;
+            const double delta_err = err / k;
+
+            // Вправо на данной строке
+            if (x < width - 1) {
+                errors[y][x + 1] += 5 * delta_err;
+                if (x < width - 2)
+                    errors[y][x + 2] += 3 * delta_err;
+            }
+
+            // Вниз на строку
+            if (y < height - 1) {
+                // Влево на 2
+                if (x >= 2)
+                    errors[y + 1][x - 2] += 2 * delta_err;
+
+                // Влево на 1
+                if (x != 0)
+                    errors[y + 1][x - 1] += 4 * delta_err;
+
+                // Центр
+                errors[y + 1][x] += 5 * delta_err;
+
+                // Вправо на 1
+                if (x < width - 1)
+                    errors[y + 1][x + 1] += 4 * delta_err;
+
+                // Вправо на 2
+                if (x < width - 2)
+                    errors[y + 1][x + 2] += 2 * delta_err;
+
+                // Если есть строка на 2 ниже
+                if (y < height - 2) {
+                    // Влево на 1
+                    if (x != 0)
+                        errors[y + 2][x - 1] += 2 * delta_err;
+
+                    // Центр
+                    errors[y + 2][x] += 3 * delta_err;
+
+                    // Вправо на 1
+                    if (x < width - 1)
+                        errors[y + 2][x + 1] += 2 * delta_err;
+                }
+            }
+
+            draw_pix(pix_data, width, x, y,
+                     nearest_palette_color,
+                     gamma);
 
         }
     }
@@ -335,21 +397,18 @@ int main(int argc, char *argv[]) {
         ordered_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 2) {
         random_dithering(width, height, pix_data, gamma, bitness);
-    }
-
-//#ifndef FIRST_METHODS
-    else if (dithering == 3) {
+    } else if (dithering == 3) {
 //        Floyd_Steinberg_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 4) {
 //        Jarvis_Judice_Ninke_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 5) {
-//        Sierra_3_dithering(width, height, pix_data, gamma, bitness);
+        Sierra_3_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 6) {
         Atkinson_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 7) {
 //        Halftone_dithering(width, height, pix_data, gamma, bitness);
     }
-//#endif
+
 #ifdef ENABLE_FILE_INPUT
     }
 #endif
