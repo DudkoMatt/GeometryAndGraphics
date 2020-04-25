@@ -99,45 +99,6 @@ unsigned char find_nearest_palette_color(unsigned bitness, double pix_data, doub
     }
 }
 
-// ToDO: исправить ошибку
-void ordered_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-
-            double barrier_brightness =
-                    (Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE]) / ((double) MATRIX_SIZE * MATRIX_SIZE);
-
-            double curr_brightness = change_pix_gamma_to_print(std::min(1.0, std::max(0.0,
-                    get_pix_color(x, y, width, pix_data_input, 0) + (barrier_brightness - 0.5) / 2.0
-            )), gamma);
-
-            draw_pix(pix_data, width, x, y,
-                     find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
-                     gamma);
-
-
-        }
-    }
-}
-
-
-void Halftone_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-
-            double barrier_brightness = (Halftone_Matrix[y % 4][x % 4]) / 16.0;
-
-            double curr_brightness = change_pix_gamma_to_print(get_pix_color(x, y, width, pix_data_input, 0), gamma);
-
-            draw_pix(pix_data, width, x, y,
-                     find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
-                     gamma);
-
-
-        }
-    }
-}
-
 // Для Floyd_Steinberg_dithering
 // ToDO: сделать более быстрым подбор
 unsigned char find_nearest_palette_color(unsigned bitness, double pix_data) {
@@ -165,6 +126,49 @@ unsigned char find_nearest_palette_color(unsigned bitness, double pix_data) {
     } else
         return change_bitness(bitness, i);
 
+}
+
+// ToDO: исправить ошибку
+void ordered_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            double barrier_brightness =
+                    (Bayer_Matrix[y % MATRIX_SIZE][x % MATRIX_SIZE]) / ((double) MATRIX_SIZE * MATRIX_SIZE);
+
+//            double curr_brightness = change_pix_gamma_to_print(std::min(1.0, std::max(0.0,
+//                    get_pix_color(x, y, width, pix_data_input, 0) + (barrier_brightness - 0.5) / 255.0
+//            )), gamma);
+
+            draw_pix(pix_data, width, x, y,
+                     change_bitness(bitness, (unsigned char)
+
+                     std::min(255.0, std::max(0.0, (255.0 * (get_pix_color(x, y, width, pix_data_input, 0)) + (barrier_brightness - 0.5) * (255u >> bitness - 1) / 2.0 )))
+
+                     ),
+                     gamma);
+
+
+        }
+    }
+}
+
+
+void Halftone_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            double barrier_brightness = (Halftone_Matrix[y % 4][x % 4]) / 16.0;
+
+            double curr_brightness = change_pix_gamma_to_print(get_pix_color(x, y, width, pix_data_input, 0), gamma);
+
+            draw_pix(pix_data, width, x, y,
+                     find_nearest_palette_color(bitness, curr_brightness, barrier_brightness),
+                     gamma);
+
+
+        }
+    }
 }
 
 void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
