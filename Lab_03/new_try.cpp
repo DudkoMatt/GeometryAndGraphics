@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <string>
 
-#define FILE_OUTPUT
-//#define ENABLE_FILE_INPUT
+//#define FILE_OUTPUT
+#define ENABLE_FILE_INPUT
 
 // ToDO: debug
 #ifdef FILE_OUTPUT
@@ -27,11 +27,18 @@ const double Bayer_Matrix_double[8][8] = {
 const int MATRIX_SIZE = 8;
 
 
-const int Halftone_Matrix[4][4] = {
-        {6,  12, 10, 3},
-        {11, 15, 13, 7},
-        {9,  14, 5,  1},
-        {4,  8,  2,  0}
+//const int Halftone_Matrix[4][4] = {
+//        {6,  12, 10, 3},
+//        {11, 15, 13, 7},
+//        {9,  14, 5,  1},
+//        {4,  8,  2,  0}
+//};
+
+const double Halftone_Matrix_double[4][4] = {
+        {0.375, 0.75, 0.625, 0.1875},
+        {0.6875, 0.9375, 0.8125, 0.4375},
+        {0.5625, 0.875, 0.3125, 0.0625},
+        {0.25, 0.5, 0.125, 0.0}
 };
 
 
@@ -349,6 +356,60 @@ void Atkinson_dithering(int width, int height, unsigned char *pix_data, double g
     }
 }
 
+unsigned char calc_value(unsigned char pattern, unsigned bitness) {
+    return change_bitness(bitness, pattern << (8 - bitness));
+}
+
+unsigned char find_nearest_palette_color(unsigned bitness, unsigned char current_color, unsigned char barrier_brightness) {
+    // Return color in [0..255]
+
+    if (current_color <= barrier_brightness)
+        return 0;
+    else {
+        unsigned char _pattern = (unsigned) current_color >> (8 - bitness);
+        if (calc_value(_pattern, bitness) <= barrier_brightness)
+            _pattern++;
+
+        return calc_value(_pattern, bitness);
+    }
+}
+
+// Previous version
+/*unsigned char find_nearest_palette_color(unsigned bitness, unsigned char current_color, unsigned char barrier_brightness) {
+    // Return color in [0..255]
+
+    if (current_color <= barrier_brightness)
+        return 0;
+    else {
+        while (current_color < 255 && current_color != change_bitness(bitness, current_color))
+            current_color++;
+
+        return current_color;
+    }
+}*/
+
+void Halftone_dithering(int width, int height, unsigned char *pix_data, double gamma, unsigned bitness, unsigned char *pix_data_input = nullptr) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            // ToDO: debug
+//            unsigned char data = get_pix_color(x, y, width, pix_data_input);
+//            unsigned char brightness = find_nearest_palette_color(bitness,
+//                                                                  get_pix_color(x, y, width, pix_data_input),
+//                                                                  (unsigned char) (255 * Halftone_Matrix_double[y % 4][x % 4]));
+//            auto barrier = (unsigned char) (255 * Halftone_Matrix_double[y % 4][x % 4]);
+
+            draw_pix(pix_data, width, x, y,
+                     find_nearest_palette_color(bitness,
+                             get_pix_color(x, y, width, pix_data_input),
+                                                (unsigned char) (255 * Halftone_Matrix_double[y % 4][x % 4])),
+                     gamma);
+
+
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     if (argc != 7 && argc != 6) {
@@ -517,7 +578,7 @@ int main(int argc, char *argv[]) {
     } else if (dithering == 6) {
         Atkinson_dithering(width, height, pix_data, gamma, bitness);
     } else if (dithering == 7) {
-//        Halftone_dithering(width, height, pix_data, gamma, bitness);
+        Halftone_dithering(width, height, pix_data, gamma, bitness);
     }
 
 #ifdef ENABLE_FILE_INPUT
