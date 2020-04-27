@@ -78,6 +78,59 @@ void rgb2hsv(unsigned char *pix_data, int all_bytes) {
     }
 }
 
+template <class T>
+bool in_range(T left, T x, T right) {
+    return (left <= x) && (x <= right);
+}
+
+void hsv2rgb(unsigned char *pix_data, int all_bytes) {
+    for (int i = 0; i < all_bytes; i += 3) {
+        long double H = pix_data[i] / (long double) 255.0 * 360;
+        long double S = pix_data[i + 1] / (long double) 255.0;
+        long double V = pix_data[i + 2] / (long double) 255.0;
+
+        long double C = V * S;
+        long double X = C * (1 - std::abs(((int) H / 60) % 2 - 1));
+        long double m = V - C;
+
+        long double _R, _G, _B;
+
+        if (in_range(0.0l, H, 60.0l)) {
+            _R = C;
+            _G = X;
+            _B = 0;
+        } else if (in_range(60.0l, H, 120.0l)) {
+            _R = X;
+            _G = C;
+            _B = 0;
+        } else if (in_range(120.0l, H, 180.0l)) {
+            _R = 0;
+            _G = C;
+            _B = X;
+        } else if (in_range(180.0l, H, 240.0l)) {
+            _R = 0;
+            _G = X;
+            _B = C;
+        } else if (in_range(240.0l, H, 300.0l)) {
+            _R = X;
+            _G = 0;
+            _B = C;
+        } else {
+            _R = C;
+            _G = 0;
+            _B = X;
+        }
+
+        // To RGB:
+        // R:
+        *(pix_data + i)     = (unsigned char) (_R + m) * 255;
+        // G
+        *(pix_data + i + 1) = (unsigned char) (_G + m) * 255;
+        // B
+        *(pix_data + i + 2) = (unsigned char) (_B + m) * 255;
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     // Часть 1: разбор аргументов командной строки
