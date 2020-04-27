@@ -131,6 +131,24 @@ void hsv2rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
+void hsv2hsl(unsigned char *pix_data, int all_bytes) {
+    for (int i = 0; i < all_bytes; i += 3) {
+        long double S = pix_data[i + 1] / (long double) 255.0;
+        long double V = pix_data[i + 2] / (long double) 255.0;
+
+        // H - is unmodified
+        long double L = V * (1 - S / 2);
+        long double S_l = L == 0 || L == 1 ? 0: V - L / std::min(L, 1 - L);
+
+        // To HSL:
+        // H - is unmodified
+        // S:
+        *(pix_data + i + 1) = (unsigned char) S_l * 255;
+        // L:
+        *(pix_data + i + 2) = (unsigned char) L * 255;
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     // Часть 1: разбор аргументов командной строки
