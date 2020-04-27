@@ -2,6 +2,7 @@
 #include <cstring>
 #include <string>
 #include <algorithm>
+#include <cmath>
 #include "write_data_pnm_v2.h"
 
 bool check_color_space(char *color_space) {
@@ -28,53 +29,96 @@ void get_separate_channel(const unsigned char *pix_data, int all_bytes, int k_ch
     }
 }
 
+// Working
 void rgb_2_hsv(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
-        int R = pix_data[i];
-        int G = pix_data[i + 1];
-        int B = pix_data[i + 2];
+        double R = pix_data[i]     / 255.0;
+        double G = pix_data[i + 1] / 255.0;
+        double B = pix_data[i + 2] / 255.0;
 
-        int MAX = std::max(R, std::max(G, B));
-        int MIN = std::min(R, std::min(G, B));
+        double MAX = std::max(R, std::max(G, B));
+        double MIN = std::min(R, std::min(G, B));
+
+        double V = MAX;
+        double C = MAX - MIN;
 
         // All in [0.0 .. 1.0]
         //   H in [0 .. 360]
-        long double H, S, V;
+        double H;
 
         // Calculating Hue
-        if (MAX == MIN) {
+        if (C == 0) {
             H = 0;
-        } else if (MAX == R) {
-            if (G >= B) {
-                H = 60.0 * (G - B) / (MAX - MIN);
-            } else {
-                // G < B
-                H = 60.0 * (G - B) / (MAX - MIN) + 360;
-            }
-        } else if (MAX == G) {
-            H = 60.0 * (B - R) / (MAX - MIN) + 120;
+        }  else if (V == R) {
+            H = (G - B) / C;
+        } else if (V == G) {
+            H = 2 + (B - R) / C;
         } else {
-            // MAX == B
-            H = 60.0 * (R - G) / (MAX - MIN) + 240;
+            // V == B
+            H = 4 + (R - G) / C;
         }
+        H *= 60;
 
-        // Calculating Saturation
-        if (MAX == 0) {
-            S = 0;
-        } else {
-            S = 1 - (long double) MIN / MAX;
-        }
+        if (H < 0)
+            H += 360;
 
-        // Calculating Value
-        V = MAX;
+        double S_v;
+        S_v = V == 0 ? 0 : C / V;
 
         // Transform to PC range: [0 .. 255]
         // H:
-        *(pix_data + i)     = (unsigned char) (H / 360.0 * 255);
+        *(pix_data + i)     = (unsigned char) limit_brightness(std::round(H / 360.0 * 255));
         // S:
-        *(pix_data + i + 1) = (unsigned char) (S * 255);
+        *(pix_data + i + 1) = (unsigned char) limit_brightness(std::round(S_v * 255));
         // V:
-        *(pix_data + i + 2) = (unsigned char) (V * 255);
+        *(pix_data + i + 2) = (unsigned char) limit_brightness(std::round(V * 255));
+    }
+}
+
+// Working
+void rgb_2_hsl(unsigned char *pix_data, int all_bytes) {
+    for (int i = 0; i < all_bytes; i += 3) {
+        double R = pix_data[i]     / 255.0;
+        double G = pix_data[i + 1] / 255.0;
+        double B = pix_data[i + 2] / 255.0;
+
+        double MAX = std::max(R, std::max(G, B));
+        double MIN = std::min(R, std::min(G, B));
+
+        double V = MAX;
+        double C = MAX - MIN;
+        double L = (MAX + MIN) / 2.0;
+
+        // All in [0.0 .. 1.0]
+        //   H in [0 .. 360]
+        double H;
+
+        // Calculating Hue
+        if (C == 0) {
+            H = 0;
+        }  else if (V == R) {
+            H = (G - B) / C;
+        } else if (V == G) {
+            H = 2 + (B - R) / C;
+        } else {
+            // V == B
+            H = 4 + (R - G) / C;
+        }
+        H *= 60;
+
+        if (H < 0)
+            H += 360;
+
+        double S_l;
+        S_l = L == 0 || L == 1 ? 0 : (V - L) / std::min(L, 1 - L);
+
+        // Transform to PC range: [0 .. 255]
+        // H:
+        *(pix_data + i)     = (unsigned char) limit_brightness(std::round((H / 360.0 * 255)));
+        // S:
+        *(pix_data + i + 1) = (unsigned char) limit_brightness(std::round((S_l * 255)));
+        // V:
+        *(pix_data + i + 2) = (unsigned char) limit_brightness(std::round((L * 255)));
     }
 }
 
@@ -83,35 +127,36 @@ bool in_range(T left, T x, T right) {
     return (left <= x) && (x <= right);
 }
 
+// Working
 void hsv_2_rgb(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
-        long double H = pix_data[i] / (long double) 255.0 * 360;
-        long double S = pix_data[i + 1] / (long double) 255.0;
-        long double V = pix_data[i + 2] / (long double) 255.0;
+        double H = pix_data[i] / 255.0 * 360;
+        double S_v = pix_data[i + 1] / 255.0;
+        double V = pix_data[i + 2] / 255.0;
 
-        long double C = V * S;
-        long double X = C * (1 - std::abs(((int) H / 60) % 2 - 1));
-        long double m = V - C;
+        double C = V * S_v;
+        double _H = H / 60;
+        double X = C * (1 - std::abs(((int) _H) % 2 - 1));
 
-        long double _R, _G, _B;
+        double _R, _G, _B;
 
-        if (in_range(0.0l, H, 60.0l)) {
+        if (in_range(0., H, 1.)) {
             _R = C;
             _G = X;
             _B = 0;
-        } else if (in_range(60.0l, H, 120.0l)) {
+        } else if (in_range(1., H, 2.)) {
             _R = X;
             _G = C;
             _B = 0;
-        } else if (in_range(120.0l, H, 180.0l)) {
+        } else if (in_range(2., H, 3.)) {
             _R = 0;
             _G = C;
             _B = X;
-        } else if (in_range(180.0l, H, 240.0l)) {
+        } else if (in_range(3., H, 4.)) {
             _R = 0;
             _G = X;
             _B = C;
-        } else if (in_range(240.0l, H, 300.0l)) {
+        } else if (in_range(4., H, 5.)) {
             _R = X;
             _G = 0;
             _B = C;
@@ -121,24 +166,31 @@ void hsv_2_rgb(unsigned char *pix_data, int all_bytes) {
             _B = X;
         }
 
+        double m = V - C;
+
         // To RGB:
         // R:
-        *(pix_data + i)     = (unsigned char) (_R + m) * 255;
+        *(pix_data + i)     = (unsigned char) limit_brightness(std::round((_R + m) * 255));
         // G
-        *(pix_data + i + 1) = (unsigned char) (_G + m) * 255;
+        *(pix_data + i + 1) = (unsigned char) limit_brightness(std::round((_G + m) * 255));
         // B
-        *(pix_data + i + 2) = (unsigned char) (_B + m) * 255;
+        *(pix_data + i + 2) = (unsigned char) limit_brightness(std::round((_B + m) * 255));
     }
 }
 
-void hsv_2_hsl(unsigned char *pix_data, int all_bytes) {
+// ToDO:
+void hsl_2_rgb(unsigned char *pix_data, int all_bytes) {
+    std::cout << "ToDO";
+}
+
+/*void hsv_2_hsl(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
-        long double S = pix_data[i + 1] / (long double) 255.0;
-        long double V = pix_data[i + 2] / (long double) 255.0;
+        double S = pix_data[i + 1] / 255.0;
+        double V = pix_data[i + 2] / 255.0;
 
         // H - is unmodified
-        long double L = V * (1 - S / 2);
-        long double S_l = L == 0 || L == 1 ? 0: V - L / std::min(L, 1 - L);
+        double L = V * (1 - S / 2);
+        double S_l = L == 0 || L == 1 ? 0: (V - L) / std::min(L, 1 - L);
 
         // To HSL:
         // H - is unmodified
@@ -151,12 +203,12 @@ void hsv_2_hsl(unsigned char *pix_data, int all_bytes) {
 
 void hsl_2_hsv(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
-        long double S = pix_data[i + 1] / (long double) 255.0;
-        long double L = pix_data[i + 2] / (long double) 255.0;
+        double S = pix_data[i + 1] / 255.0;
+        double L = pix_data[i + 2] / 255.0;
 
         // H - is unmodified
-        long double V = L + S * std::min(L, 1 - L);
-        long double S_v = V == 0 ? 0 : 2 * (1 - L / V);
+        double V = L + S * std::min(L, 1 - L);
+        double S_v = V == 0 ? 0 : 2 * (1 - L / V);
 
         // To HSV:
         // H - is unmodified
@@ -165,17 +217,18 @@ void hsl_2_hsv(unsigned char *pix_data, int all_bytes) {
         // V:
         *(pix_data + i + 2) = (unsigned char) L * 255;
     }
-}
+}*/
 
+// ToDO:
 void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
-        long double R = pix_data[i] / (long double) 255.0;
-        long double G = pix_data[i + 1] / (long double) 255.0;
-        long double B = pix_data[i + 2] / (long double) 255.0;
+        double R = pix_data[i] / 255.0;
+        double G = pix_data[i + 1] / 255.0;
+        double B = pix_data[i + 2] / 255.0;
 
-        long double Y =   16  + ( 65.481l * R + 128.553l * G + 24.966l * B);
-        long double C_b = 128 + (-37.797l * R  - 74.203l * G +  112.0l * B);
-        long double C_r = 128 + (112.0l   * R  - 93.786l * G - 18.214l * B);
+        double Y =   16  + ( 65.481 * R + 128.553 * G + 24.966 * B);
+        double C_b = 128 + (-37.797 * R  - 74.203 * G +  112.0 * B);
+        double C_r = 128 + (112.0   * R  - 93.786 * G - 18.214 * B);
 
         // To YCbCr_601:
         *(pix_data + i)     = (unsigned char) Y * 255;
@@ -183,32 +236,20 @@ void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes) {
         *(pix_data + i + 2) = (unsigned char) ((C_r + 0.5) * 255);
     }
 }
-
-// ToDO: debug
+// ToDO:
 void YCbCr_601_2_rgb(unsigned char *pix_data, int all_bytes) {
-    /*for (int i = 0; i < all_bytes; i += 3) {
-        long double Y = pix_data[i] / (long double) 255.0;
-        long double C_b = pix_data[i + 1] / (long double) 255.0 - 0.5;
-        long double C_r = pix_data[i + 2] / (long double) 255.0 - 0.5;
-
-        // To RGB:
-        *(pix_data + i)     = (unsigned char) (298.082 * Y / 256 + 408.583 * C_r / 256 - 222.921);
-        *(pix_data + i + 1) = (unsigned char) (298.082 * Y / 256 - 100.291 * C_b - 208.120 * C_r / 256 + 135.576);
-        *(pix_data + i + 2) = (unsigned char) (298.082 * Y / 256 + 516.412 * C_b / 256 - 276.836);
-    }*/
-
-    long double K_b = 0.114;
-    long double K_r = 0.299;
-    long double K_g = 1 - K_b - K_r;
+    double K_b = 0.114;
+    double K_r = 0.299;
+    double K_g = 1 - K_b - K_r;
 
     for (int i = 0; i < all_bytes; i += 3) {
-        long double Y =   pix_data[i]     / (long double) 255.0;
-        long double C_b = pix_data[i + 1] / (long double) 255.0 - 0.5;
-        long double C_r = pix_data[i + 2] / (long double) 255.0 - 0.5;
+        double Y =   pix_data[i]     / 255.0;
+        double C_b = pix_data[i + 1] / 255.0 - 0.5;
+        double C_r = pix_data[i + 2] / 255.0 - 0.5;
 
-        long double R = Y + (2 - 2 * K_r) * C_r;
-        long double G = Y - K_b * (2 - 2 * K_b) * C_b / K_g - K_r * (2 - 2 * K_r) * C_r / K_g;
-        long double B = Y + (2 - 2 * K_b) * C_b;
+        double R = Y + (2 - 2 * K_r) * C_r;
+        double G = Y - K_b * (2 - 2 * K_b) * C_b / K_g - K_r * (2 - 2 * K_r) * C_r / K_g;
+        double B = Y + (2 - 2 * K_b) * C_b;
 
         // To RGB:
         *(pix_data + i)     = (unsigned char) R * 255;
@@ -216,20 +257,20 @@ void YCbCr_601_2_rgb(unsigned char *pix_data, int all_bytes) {
         *(pix_data + i + 2) = (unsigned char) B * 255;
     }
 }
-
+// ToDO: not working
 void rgb_2_YCbCr_709(unsigned char *pix_data, int all_bytes) {
-    long double K_b = 0.0722;
-    long double K_r = 0.2126;
-    long double K_g = 0.7152;
+    double K_b = 0.0722;
+    double K_r = 0.2126;
+    double K_g = 0.7152;
 
     for (int i = 0; i < all_bytes; i += 3) {
-        long double R = pix_data[i] / (long double) 255.0;
-        long double G = pix_data[i + 1] / (long double) 255.0;
-        long double B = pix_data[i + 2] / (long double) 255.0;
+        double R = pix_data[i] / 255.0;
+        double G = pix_data[i + 1] / 255.0;
+        double B = pix_data[i + 2] / 255.0;
 
-        long double Y =   K_r * R + K_g * G + K_b * B;
-        long double C_b = (B - Y) / (2 * (1 - K_b));
-        long double C_r = (R - Y) / (2 * (1 - K_r));
+        double Y =   K_r * R + K_g * G + K_b * B;
+        double C_b = (B - Y) / (2 * (1 - K_b));
+        double C_r = (R - Y) / (2 * (1 - K_r));
 
         // To YCbCr_709:
         *(pix_data + i)     = (unsigned char) Y   * 255;
@@ -237,20 +278,20 @@ void rgb_2_YCbCr_709(unsigned char *pix_data, int all_bytes) {
         *(pix_data + i + 2) = (unsigned char) ((C_r + 0.5) * 255);
     }
 }
-
+// ToDO: not working
 void YCbCr_709_2_rgb(unsigned char *pix_data, int all_bytes) {
-    long double K_b = 0.0722;
-    long double K_r = 0.2126;
-    long double K_g = 0.7152;
+    double K_b = 0.0722;
+    double K_r = 0.2126;
+    double K_g = 0.7152;
 
     for (int i = 0; i < all_bytes; i += 3) {
-        long double Y =   pix_data[i]     / (long double) 255.0;
-        long double C_b = pix_data[i + 1] / (long double) 255.0 - 0.5;
-        long double C_r = pix_data[i + 2] / (long double) 255.0 - 0.5;
+        double Y =   pix_data[i]     / 255.0;
+        double C_b = pix_data[i + 1] / 255.0 - 0.5;
+        double C_r = pix_data[i + 2] / 255.0 - 0.5;
 
-        long double R = Y + (2 - 2 * K_r) * C_r;
-        long double G = Y - K_b * (2 - 2 * K_b) * C_b / K_g - K_r * (2 - 2 * K_r) * C_r / K_g;
-        long double B = Y + (2 - 2 * K_b) * C_b;
+        double R = Y + (2 - 2 * K_r) * C_r;
+        double G = Y - K_b * (2 - 2 * K_b) * C_b / K_g - K_r * (2 - 2 * K_r) * C_r / K_g;
+        double B = Y + (2 - 2 * K_b) * C_b;
 
         // To RGB:
         *(pix_data + i)     = (unsigned char) R * 255;
@@ -266,23 +307,23 @@ void rgb_2_YCoCg(unsigned char *pix_data, int all_bytes) {
         int B = pix_data[i + 2];
 
         // Y
-        *(pix_data + i)     = (unsigned char) ((R + B) / 4.0l + G / 2.0l) * 255;
+        *(pix_data + i)     = (unsigned char) ((R + B) / 4.0 + G / 2.0) * 255;
 
         // Co
-        *(pix_data + i + 1) = (unsigned char) ((((R - B) / 2.0l) + 0.5) * 255);
+        *(pix_data + i + 1) = (unsigned char) ((((R - B) / 2.0) + 0.5) * 255);
 
         // Cg
-        *(pix_data + i + 2) = (unsigned char) (((G / 2.0l - (B + R) / 4.0l) + 0.5) * 255);
+        *(pix_data + i + 2) = (unsigned char) (((G / 2.0 - (B + R) / 4.0) + 0.5) * 255);
     }
 }
 
 void YCoCg_2_rgb(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
-        long double Y = pix_data[i] / (long double) 255.0;
-        long double Co = pix_data[i + 1] / (long double) 255.0 - 0.5;
-        long double Cg = pix_data[i + 2] / (long double) 255.0 - 0.5;
+        double Y = pix_data[i] / 255.0;
+        double Co = pix_data[i + 1] / 255.0 - 0.5;
+        double Cg = pix_data[i + 2] / 255.0 - 0.5;
 
-        long double tmp = Y - Cg;
+        double tmp = Y - Cg;
 
         // To RGB:
         *(pix_data + i)     = (unsigned char) (tmp + Co) * 255;
@@ -291,12 +332,14 @@ void YCoCg_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
+// Working
 void rgb_2_cmy(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; ++i) {
         *(pix_data + i) = 255 - *(pix_data + i);
     }
 }
 
+// Working
 void cmy_2_rgb(unsigned char *pix_data, int all_bytes) {
     rgb_2_cmy(pix_data, all_bytes);
 }
@@ -475,8 +518,7 @@ int main(int argc, char *argv[]) {
         // Изначально преобразуем в RGB
         
         if (strcmp(from_color_space, "HSL") == 0) {
-            hsl_2_hsv(pix_data, k_bytes);
-            hsv_2_rgb(pix_data, k_bytes);
+            hsl_2_rgb(pix_data, k_bytes);
         } else if (strcmp(from_color_space, "HSV") == 0) {
             hsv_2_rgb(pix_data, k_bytes);
         } else if (strcmp(from_color_space, "YCbCr.601") == 0) {
@@ -492,8 +534,7 @@ int main(int argc, char *argv[]) {
         // Затем в нужное пространство
 
         if (strcmp(to_color_space, "HSL") == 0) {
-            rgb_2_hsv(pix_data, k_bytes);
-            hsv_2_hsl(pix_data, k_bytes);
+            rgb_2_hsl(pix_data, k_bytes);
         } else if (strcmp(to_color_space, "HSV") == 0) {
             rgb_2_hsv(pix_data, k_bytes);
         } else if (strcmp(to_color_space, "YCbCr.601") == 0) {
