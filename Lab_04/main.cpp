@@ -291,6 +291,16 @@ void YCoCg_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
+void rgb_2_cmy(unsigned char *pix_data, int all_bytes) {
+    for (int i = 0; i < all_bytes; ++i) {
+        *(pix_data + i) = 255 - *(pix_data + i);
+    }
+}
+
+void cmy_2_rgb(unsigned char *pix_data, int all_bytes) {
+    rgb_2_cmy(pix_data, all_bytes);
+}
+
 int main(int argc, char *argv[]) {
 
     // Часть 1: разбор аргументов командной строки
