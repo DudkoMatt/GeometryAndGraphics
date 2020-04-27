@@ -167,6 +167,23 @@ void hsl2hsv(unsigned char *pix_data, int all_bytes) {
     }
 }
 
+void rgb2YCbCr_601(unsigned char *pix_data, int all_bytes, long double K_b, long double K_r) {
+    for (int i = 0; i < all_bytes; i += 3) {
+        long double R = pix_data[i] / (long double) 255.0;
+        long double G = pix_data[i + 1] / (long double) 255.0;
+        long double B = pix_data[i + 2] / (long double) 255.0;
+
+        long double Y =   16  + ( 65.481l * R + 128.553l * G + 24.966l * B);
+        long double C_b = 128 + (-37.797l * R  - 74.203l * G +  112.0l * B);
+        long double C_r = 128 + (112.0l   * R  - 93.786l * G - 18.214l * B);
+
+        // To YCbCr_601:
+        *(pix_data + i) = (unsigned char) Y;
+        *(pix_data + i + 1) = (unsigned char) C_b;
+        *(pix_data + i + 2) = (unsigned char) C_r;
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     // Часть 1: разбор аргументов командной строки
@@ -333,6 +350,9 @@ int main(int argc, char *argv[]) {
     // Часть 3: преобразования
 
     // ToDO
+    // conversions:
+    // RGB <=> HSV
+    // HSV <=> HSL
 
     // Часть 4: вывод в файл(-ы)
 
