@@ -2,7 +2,7 @@
 // Created by dudko on 11.03.2020.
 //
 
-#include "write_data_pnm.h"
+#include "write_data_pnm_v2.h"
 #include <cmath>
 
 void write_header(FILE *file_out, char char_header, int width, int height, unsigned int max_value) {
@@ -12,6 +12,21 @@ void write_header(FILE *file_out, char char_header, int width, int height, unsig
 
 void write_data(FILE *file_out, int k_bytes, unsigned char *pix_data) {
     fwrite(pix_data, k_bytes, 1, file_out);
+}
+
+int read_header(char &char_header, int &width, int &height, unsigned int &max_value, FILE *file_in) {
+    int scanned = fscanf(file_in, "P%c\n%i %i\n%i\n", &char_header, &width, &height, &max_value);
+    if (scanned != 4)
+        return 1;
+    if (width <= 0 || height <= 0 || max_value <= 0 || max_value > 255 || (char_header != '5' && char_header != '6'))
+        return 2;
+    return 0;
+}
+
+void read_data(FILE *file_in, int k_bytes, unsigned char *pix_data) {
+    if (!pix_data)
+        return;
+    fread(pix_data, 1, k_bytes, file_in);
 }
 
 void free_data(FILE *file_in, FILE *file_out, unsigned char *pix_data) {
@@ -30,6 +45,22 @@ void free_data(FILE *file) {
 
 void free_data(unsigned char *pix_data) {
     free_data(nullptr, pix_data);
+}
+
+namespace color {
+    void write_to_file(FILE *file_out, int width, int height, unsigned int max_value,
+                       unsigned char *pix_data) {
+        write_header(file_out, '6', width, height, max_value);
+        write_data(file_out, 3 * width * height, pix_data);
+    }
+}
+
+namespace gray {
+    void write_to_file(FILE *file_out, int width, int height, unsigned int max_value,
+                       unsigned char *pix_data) {
+        write_header(file_out, '5', width, height, max_value);
+        write_data(file_out, width * height, pix_data);
+    }
 }
 
 void write_to_file(FILE *file_out, char char_header, int width, int height, unsigned int max_value,

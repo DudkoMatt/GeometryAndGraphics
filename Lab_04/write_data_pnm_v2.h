@@ -9,11 +9,24 @@
 
 void write_header(FILE *file_out, char char_header, int width, int height, unsigned int max_value);
 void write_data(FILE *file_out, int k_bytes, unsigned char *pix_data);
+int read_header(char &char_header, int &width, int &height, unsigned int &max_value, FILE *file_in);
+void read_data(FILE *file_in, int k_bytes, unsigned char *pix_data);
 void free_data(FILE *file_in, FILE *file_out, unsigned char *pix_data);
 void free_data(FILE *file, unsigned char *pix_data);
 void free_data(FILE *file);
 void free_data(unsigned char *pix_data);
-void write_to_file(FILE *file_out, char char_header, int width, int height, unsigned int max_value, unsigned char *pix_data);
+namespace color {
+    void write_to_file(FILE *file_out, int width, int height, unsigned int max_value,
+                       unsigned char *pix_data);
+}
+
+namespace gray {
+    void write_to_file(FILE *file_out, int width, int height, unsigned int max_value,
+                       unsigned char *pix_data);
+}
+
+void write_to_file(FILE *file_out, char char_header, int width, int height, unsigned int max_value,
+                   unsigned char *pix_data);
 
 unsigned char limit_brightness(double brightness);
 
