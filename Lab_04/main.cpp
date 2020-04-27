@@ -197,6 +197,48 @@ void YCbCr_601_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
+void rgb_2_YCbCr_709(unsigned char *pix_data, int all_bytes) {
+    long double K_b = 0.0722;
+    long double K_r = 0.2126;
+    long double K_g = 0.7152;
+
+    for (int i = 0; i < all_bytes; i += 3) {
+        long double R = pix_data[i] / (long double) 255.0;
+        long double G = pix_data[i + 1] / (long double) 255.0;
+        long double B = pix_data[i + 2] / (long double) 255.0;
+
+        long double Y =   K_r * R + K_g * G + K_b * B;
+        long double C_b = (B - Y) / (2 * (1 - K_b));
+        long double C_r = (R - Y) / (2 * (1 - K_r));
+
+        // To YCbCr_709:
+        *(pix_data + i)     = (unsigned char) Y   * 255;
+        *(pix_data + i + 1) = (unsigned char) C_b * 255;
+        *(pix_data + i + 2) = (unsigned char) C_r * 255;
+    }
+}
+
+void YCbCr_709_2_rgb(unsigned char *pix_data, int all_bytes) {
+    long double K_b = 0.0722;
+    long double K_r = 0.2126;
+    long double K_g = 0.7152;
+
+    for (int i = 0; i < all_bytes; i += 3) {
+        long double Y =   pix_data[i]     / (long double) 255.0;
+        long double C_b = pix_data[i + 1] / (long double) 255.0;
+        long double C_r = pix_data[i + 2] / (long double) 255.0;
+
+        long double R = Y + (2 - 2 * K_r) * C_r;
+        long double G = Y - K_b * (2 - 2 * K_b) * C_b / K_g - K_r * (2 - 2 * K_r) * C_r / K_g;
+        long double B = Y + (2 - 2 * K_b) * C_b;
+
+        // To RGB:
+        *(pix_data + i)     = (unsigned char) R * 255;
+        *(pix_data + i + 1) = (unsigned char) G * 255;
+        *(pix_data + i + 2) = (unsigned char) B * 255;
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     // Часть 1: разбор аргументов командной строки
