@@ -21,6 +21,12 @@ void add_channel(unsigned char *pix_data, int k_channel, int k_bytes_channel, co
     }
 }
 
+void get_separate_channel(const unsigned char *pix_data, int all_bytes, int k_channel, unsigned char *channel_data) {
+    for (int i = 0; i < all_bytes / 3; ++i) {
+        *(channel_data + i) = *(pix_data + 3 * i + k_channel);
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     // Часть 1: разбор аргументов командной строки
@@ -105,6 +111,7 @@ int main(int argc, char *argv[]) {
         read_data(file_in, k_bytes, pix_data);
 
         fclose(file_in);
+        file_in = nullptr;
 
     } else {
         unsigned char *tmp_pix_data = nullptr;
@@ -119,7 +126,7 @@ int main(int argc, char *argv[]) {
             file_in = fopen(tmp_file_name.data(), "rb");
 
             if (file_in == nullptr) {
-                std::cerr << "Cannot open file to read: " << file_in_name << "\n";
+                std::cerr << "Cannot open file to read: " << tmp_file_name << "\n";
                 return 1;
             }
 
@@ -171,26 +178,77 @@ int main(int argc, char *argv[]) {
             add_channel(pix_data, i - 1, k_bytes, tmp_pix_data);
 
             fclose(file_in);
+            file_in = nullptr;
         }
 
-        if (tmp_pix_data)
+        if (tmp_pix_data) {
             free(tmp_pix_data);
+            tmp_pix_data = nullptr;
+        }
 
         k_bytes *= 3;
     }
 
 
-    // Test file input writing
+    // Часть 3: преобразования
 
-    file_out = fopen(file_out_name, "wb");
-    if (file_out == nullptr) {
-        std::cerr << "Cannot open file to write: " << file_out_name << "\n";
-        free_data(file_in, file_out, pix_data);
-        return 1;
+    // ToDO
+
+    // Часть 4: вывод в файл(-ы)
+
+    if (o_count == 1) {
+
+        file_out = fopen(file_out_name, "wb");
+        if (file_out == nullptr) {
+            std::cerr << "Cannot open file to write: " << file_out_name << "\n";
+            free_data(file_in, file_out, pix_data);
+            return 1;
+        }
+
+        color::write_to_file(file_out, width, height, max_value, pix_data);
+        fclose(file_out);
+
+    } else {
+        unsigned char *tmp_channel_data = nullptr;
+
+        for (int i = 1; i <= 3; ++i) {
+            std::string tmp_file_name(file_out_name);
+            std::string idx("_");
+            idx.append(1, '0' + i);
+            tmp_file_name.insert(tmp_file_name.begin() + tmp_file_name.find_last_of('.'), idx.begin(), idx.end());
+
+            file_out = fopen(tmp_file_name.data(), "wb");
+            if (file_out == nullptr) {
+                std::cerr << "Cannot open file to write: " << tmp_file_name << "\n";
+                free_data(file_in, file_out, pix_data);
+                return 1;
+            }
+
+            if (tmp_channel_data == nullptr) {
+                tmp_channel_data = (unsigned char *) calloc(k_bytes / 3, 1);
+                if (tmp_channel_data == nullptr) {
+                    std::cerr << "Cannot allocate " << k_bytes / 3 << " bytes of memory\n";
+                    free_data(file_in, file_out, pix_data);
+                    return 1;
+                }
+            }
+
+            for (int j = 0; j < k_bytes / 3; ++j) {
+                *(tmp_channel_data + i) = 0;
+            }
+
+            get_separate_channel(pix_data, k_bytes, i - 1, tmp_channel_data);
+            gray::write_to_file(file_out, width, height, max_value, tmp_channel_data);
+            fclose(file_out);
+            file_out = nullptr;
+        }
+
+        if (tmp_channel_data) {
+            free(tmp_channel_data);
+            tmp_channel_data = nullptr;
+        }
     }
 
-    color::write_to_file(file_out, width, height, max_value, pix_data);
     free_data(file_in, file_out, pix_data);
-
     return 0;
 }

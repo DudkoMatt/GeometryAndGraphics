@@ -16,11 +16,13 @@ void free_data(FILE *file, unsigned char *pix_data);
 void free_data(FILE *file);
 void free_data(unsigned char *pix_data);
 namespace color {
+    void write_header(FILE *file_out, int width, int height, unsigned int max_value);
     void write_to_file(FILE *file_out, int width, int height, unsigned int max_value,
                        unsigned char *pix_data);
 }
 
 namespace gray {
+    void write_header(FILE *file_out, int width, int height, unsigned int max_value);
     void write_to_file(FILE *file_out, int width, int height, unsigned int max_value,
                        unsigned char *pix_data);
 }

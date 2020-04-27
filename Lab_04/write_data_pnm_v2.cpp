@@ -48,17 +48,27 @@ void free_data(unsigned char *pix_data) {
 }
 
 namespace color {
+    void write_header(FILE *file_out, int width, int height, unsigned int max_value) {
+        fseek(file_out, 0, SEEK_SET);
+        fprintf(file_out, "P%c\n%i %i\n%i\n", '6', width, height, max_value);
+    }
+
     void write_to_file(FILE *file_out, int width, int height, unsigned int max_value,
                        unsigned char *pix_data) {
-        write_header(file_out, '6', width, height, max_value);
+        color::write_header(file_out, width, height, max_value);
         write_data(file_out, 3 * width * height, pix_data);
     }
 }
 
 namespace gray {
+    void write_header(FILE *file_out, int width, int height, unsigned int max_value) {
+        fseek(file_out, 0, SEEK_SET);
+        fprintf(file_out, "P%c\n%i %i\n%i\n", '5', width, height, max_value);
+    }
+
     void write_to_file(FILE *file_out, int width, int height, unsigned int max_value,
                        unsigned char *pix_data) {
-        write_header(file_out, '5', width, height, max_value);
+        gray::write_header(file_out, width, height, max_value);
         write_data(file_out, width * height, pix_data);
     }
 }
