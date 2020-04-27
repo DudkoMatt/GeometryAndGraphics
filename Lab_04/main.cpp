@@ -28,7 +28,7 @@ void get_separate_channel(const unsigned char *pix_data, int all_bytes, int k_ch
     }
 }
 
-void rgb2hsv(unsigned char *pix_data, int all_bytes) {
+void rgb_2_hsv(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         int R = pix_data[i];
         int G = pix_data[i + 1];
@@ -83,7 +83,7 @@ bool in_range(T left, T x, T right) {
     return (left <= x) && (x <= right);
 }
 
-void hsv2rgb(unsigned char *pix_data, int all_bytes) {
+void hsv_2_rgb(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         long double H = pix_data[i] / (long double) 255.0 * 360;
         long double S = pix_data[i + 1] / (long double) 255.0;
@@ -131,7 +131,7 @@ void hsv2rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-void hsv2hsl(unsigned char *pix_data, int all_bytes) {
+void hsv_2_hsl(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         long double S = pix_data[i + 1] / (long double) 255.0;
         long double V = pix_data[i + 2] / (long double) 255.0;
@@ -149,7 +149,7 @@ void hsv2hsl(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-void hsl2hsv(unsigned char *pix_data, int all_bytes) {
+void hsl_2_hsv(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         long double S = pix_data[i + 1] / (long double) 255.0;
         long double L = pix_data[i + 2] / (long double) 255.0;
@@ -167,7 +167,7 @@ void hsl2hsv(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-void rgb2YCbCr_601(unsigned char *pix_data, int all_bytes, long double K_b, long double K_r) {
+void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes, long double K_b, long double K_r) {
     for (int i = 0; i < all_bytes; i += 3) {
         long double R = pix_data[i] / (long double) 255.0;
         long double G = pix_data[i + 1] / (long double) 255.0;
@@ -182,6 +182,10 @@ void rgb2YCbCr_601(unsigned char *pix_data, int all_bytes, long double K_b, long
         *(pix_data + i + 1) = (unsigned char) C_b;
         *(pix_data + i + 2) = (unsigned char) C_r;
     }
+}
+
+void YCbCr_601_2_rgb() {
+    
 }
 
 int main(int argc, char *argv[]) {
