@@ -29,7 +29,6 @@ void get_separate_channel(const unsigned char *pix_data, int all_bytes, int k_ch
     }
 }
 
-// Working
 void rgb_2_hsv(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         double R = pix_data[i]     / 255.0;
@@ -75,7 +74,6 @@ void rgb_2_hsv(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-// Working
 void rgb_2_hsl(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         double R = pix_data[i]     / 255.0;
@@ -127,7 +125,6 @@ bool in_range(T left, T x, T right) {
     return (left <= x) && (x <= right);
 }
 
-// Working
 void hsv_2_rgb(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         double H = pix_data[i] / 255.0 * 360;
@@ -178,7 +175,6 @@ void hsv_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-// Working
 void hsl_2_rgb(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         double H = pix_data[i] / 255.0 * 360;
@@ -233,7 +229,6 @@ void hsl_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-// Working
 void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes) {
     double K_b = 0.299;
     double K_r = 0.587;
@@ -255,7 +250,6 @@ void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-// Working
 void YCbCr_601_2_rgb(unsigned char *pix_data, int all_bytes) {
     double K_b = 0.299;
     double K_r = 0.587;
@@ -277,7 +271,6 @@ void YCbCr_601_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-// Working
 void rgb_2_YCbCr_709(unsigned char *pix_data, int all_bytes) {
     double K_b = 0.0722;
     double K_r = 0.2126;
@@ -299,7 +292,6 @@ void rgb_2_YCbCr_709(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-// Working
 void YCbCr_709_2_rgb(unsigned char *pix_data, int all_bytes) {
     double K_b = 0.0722;
     double K_r = 0.2126;
@@ -321,7 +313,6 @@ void YCbCr_709_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-// Working
 void rgb_2_YCoCg(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         double R = pix_data[i] / 255.0;
@@ -337,7 +328,6 @@ void rgb_2_YCoCg(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-// Working
 void YCoCg_2_rgb(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         double Y = pix_data[i] / 255.0;
@@ -351,14 +341,12 @@ void YCoCg_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-// Working
 void rgb_2_cmy(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; ++i) {
         *(pix_data + i) = 255 - *(pix_data + i);
     }
 }
 
-// Working
 void cmy_2_rgb(unsigned char *pix_data, int all_bytes) {
     rgb_2_cmy(pix_data, all_bytes);
 }
@@ -517,11 +505,8 @@ int main(int argc, char *argv[]) {
             file_in = nullptr;
         }
 
-        if (tmp_pix_data) {
+        if (tmp_pix_data)
             free(tmp_pix_data);
-            tmp_pix_data = nullptr;
-        }
-
         k_bytes *= 3;
     }
 
@@ -616,10 +601,8 @@ int main(int argc, char *argv[]) {
             file_out = nullptr;
         }
 
-        if (tmp_channel_data) {
+        if (tmp_channel_data)
             free(tmp_channel_data);
-            tmp_channel_data = nullptr;
-        }
     }
 
     free_data(file_in, file_out, pix_data);
