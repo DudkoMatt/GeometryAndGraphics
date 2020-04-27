@@ -239,6 +239,38 @@ void YCbCr_709_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
+void rgb_2_YCoCg(unsigned char *pix_data, int all_bytes) {
+    for (int i = 0; i < all_bytes; i += 3) {
+        int R = pix_data[i];
+        int G = pix_data[i + 1];
+        int B = pix_data[i + 2];
+
+        // Y
+        *(pix_data + i)     = (unsigned char) ((R + B) / 4.0l + G / 2.0l) * 255;
+
+        // Co
+        *(pix_data + i + 1) = (unsigned char) ((((R - B) / 2.0l) + 0.5) * 255);
+
+        // Cg
+        *(pix_data + i + 2) = (unsigned char) (((G / 2.0l - (B + R) / 4.0l) + 0.5) * 255);
+    }
+}
+
+void YCoCg_2_rgb(unsigned char *pix_data, int all_bytes) {
+    for (int i = 0; i < all_bytes; i += 3) {
+        long double Y = pix_data[i] / (long double) 255.0;
+        long double Co = pix_data[i + 1] / (long double) 255.0 - 0.5;
+        long double Cg = pix_data[i + 2] / (long double) 255.0 - 0.5;
+
+        long double tmp = Y - Cg;
+
+        // To RGB:
+        *(pix_data + i)     = (unsigned char) (tmp + Co) * 255;
+        *(pix_data + i + 1) = (unsigned char) (Y + Cg) * 255;
+        *(pix_data + i + 2) = (unsigned char) (tmp - Co) * 255;
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     // Часть 1: разбор аргументов командной строки
