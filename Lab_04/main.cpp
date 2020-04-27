@@ -233,28 +233,33 @@ void hsl_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-// ToDO:
+// Working
 void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes) {
+    double K_b = 0.299;
+    double K_r = 0.587;
+    double K_g = 0.114;
+
     for (int i = 0; i < all_bytes; i += 3) {
         double R = pix_data[i] / 255.0;
         double G = pix_data[i + 1] / 255.0;
         double B = pix_data[i + 2] / 255.0;
 
-        double Y =   16  + ( 65.481 * R + 128.553 * G + 24.966 * B);
-        double C_b = 128 + (-37.797 * R  - 74.203 * G +  112.0 * B);
-        double C_r = 128 + (112.0   * R  - 93.786 * G - 18.214 * B);
+        double Y =   K_r * R + K_g * G + K_b * B;
+        double C_b = (B - Y) / (2 * (1 - K_b));
+        double C_r = (R - Y) / (2 * (1 - K_r));
 
         // To YCbCr_601:
-        *(pix_data + i)     = (unsigned char) Y * 255;
-        *(pix_data + i + 1) = (unsigned char) ((C_b + 0.5) * 255);
-        *(pix_data + i + 2) = (unsigned char) ((C_r + 0.5) * 255);
+        *(pix_data + i)     = (unsigned char) limit_brightness(std::round(Y * 255));
+        *(pix_data + i + 1) = (unsigned char) limit_brightness(std::round((C_b + 0.5) * 255));
+        *(pix_data + i + 2) = (unsigned char) limit_brightness(std::round((C_r + 0.5) * 255));
     }
 }
-// ToDO:
+
+// Working
 void YCbCr_601_2_rgb(unsigned char *pix_data, int all_bytes) {
-    double K_b = 0.114;
-    double K_r = 0.299;
-    double K_g = 1 - K_b - K_r;
+    double K_b = 0.299;
+    double K_r = 0.587;
+    double K_g = 0.114;
 
     for (int i = 0; i < all_bytes; i += 3) {
         double Y =   pix_data[i]     / 255.0;
@@ -266,11 +271,12 @@ void YCbCr_601_2_rgb(unsigned char *pix_data, int all_bytes) {
         double B = Y + (2 - 2 * K_b) * C_b;
 
         // To RGB:
-        *(pix_data + i)     = (unsigned char) R * 255;
-        *(pix_data + i + 1) = (unsigned char) G * 255;
-        *(pix_data + i + 2) = (unsigned char) B * 255;
+        *(pix_data + i)     = (unsigned char) limit_brightness(std::round(R * 255));
+        *(pix_data + i + 1) = (unsigned char) limit_brightness(std::round(G * 255));
+        *(pix_data + i + 2) = (unsigned char) limit_brightness(std::round(B * 255));
     }
 }
+
 // Working
 void rgb_2_YCbCr_709(unsigned char *pix_data, int all_bytes) {
     double K_b = 0.0722;
