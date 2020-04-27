@@ -321,35 +321,33 @@ void YCbCr_709_2_rgb(unsigned char *pix_data, int all_bytes) {
     }
 }
 
+// Working
 void rgb_2_YCoCg(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
-        int R = pix_data[i];
-        int G = pix_data[i + 1];
-        int B = pix_data[i + 2];
+        double R = pix_data[i] / 255.0;
+        double G = pix_data[i + 1] / 255.0;
+        double B = pix_data[i + 2] / 255.0;
 
         // Y
-        *(pix_data + i)     = (unsigned char) ((R + B) / 4.0 + G / 2.0) * 255;
-
+        *(pix_data + i)     = (unsigned char) limit_brightness(std::round(((R + B) / 4.0 + G / 2.0) * 255));
         // Co
-        *(pix_data + i + 1) = (unsigned char) ((((R - B) / 2.0) + 0.5) * 255);
-
+        *(pix_data + i + 1) = (unsigned char) limit_brightness(std::round(((R - B) / 2.0 + 0.5) * 255));
         // Cg
-        *(pix_data + i + 2) = (unsigned char) (((G / 2.0 - (B + R) / 4.0) + 0.5) * 255);
+        *(pix_data + i + 2) = (unsigned char) limit_brightness(std::round((G / 2.0 - (B + R) / 4.0 + 0.5) * 255));
     }
 }
 
+// Working
 void YCoCg_2_rgb(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         double Y = pix_data[i] / 255.0;
         double Co = pix_data[i + 1] / 255.0 - 0.5;
         double Cg = pix_data[i + 2] / 255.0 - 0.5;
 
-        double tmp = Y - Cg;
-
         // To RGB:
-        *(pix_data + i)     = (unsigned char) (tmp + Co) * 255;
-        *(pix_data + i + 1) = (unsigned char) (Y + Cg) * 255;
-        *(pix_data + i + 2) = (unsigned char) (tmp - Co) * 255;
+        *(pix_data + i)     = (unsigned char) limit_brightness(std::round((Y - Cg + Co) * 255));
+        *(pix_data + i + 1) = (unsigned char) limit_brightness(std::round((Y + Cg) * 255));
+        *(pix_data + i + 2) = (unsigned char) limit_brightness(std::round((Y - Cg - Co) * 255));
     }
 }
 
