@@ -178,14 +178,23 @@ void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes) {
         long double C_r = 128 + (112.0l   * R  - 93.786l * G - 18.214l * B);
 
         // To YCbCr_601:
-        *(pix_data + i) = (unsigned char) Y;
+        *(pix_data + i)     = (unsigned char) Y;
         *(pix_data + i + 1) = (unsigned char) C_b;
         *(pix_data + i + 2) = (unsigned char) C_r;
     }
 }
 
-void YCbCr_601_2_rgb() {
-    
+void YCbCr_601_2_rgb(unsigned char *pix_data, int all_bytes) {
+    for (int i = 0; i < all_bytes; i += 3) {
+        long double Y = pix_data[i] / (long double) 255.0;
+        long double C_b = pix_data[i + 1] / (long double) 255.0;
+        long double C_r = pix_data[i + 2] / (long double) 255.0;
+
+        // To RGB:
+        *(pix_data + i)     = (unsigned char) (298.082 * Y / 256 + 408.583 * C_r / 256 - 222.921);
+        *(pix_data + i + 1) = (unsigned char) (298.082 * Y / 256 - 100.291 * C_b - 208.120 * C_r / 256 + 135.576);
+        *(pix_data + i + 2) = (unsigned char) (298.082 * Y / 256 + 516.412 * C_b / 256 - 276.836);
+    }
 }
 
 int main(int argc, char *argv[]) {
