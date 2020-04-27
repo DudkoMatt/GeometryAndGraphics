@@ -167,7 +167,7 @@ void hsl_2_hsv(unsigned char *pix_data, int all_bytes) {
     }
 }
 
-void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes, long double K_b, long double K_r) {
+void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes) {
     for (int i = 0; i < all_bytes; i += 3) {
         long double R = pix_data[i] / (long double) 255.0;
         long double G = pix_data[i + 1] / (long double) 255.0;
