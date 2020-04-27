@@ -178,22 +178,42 @@ void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes) {
         long double C_r = 128 + (112.0l   * R  - 93.786l * G - 18.214l * B);
 
         // To YCbCr_601:
-        *(pix_data + i)     = (unsigned char) Y;
-        *(pix_data + i + 1) = (unsigned char) C_b;
-        *(pix_data + i + 2) = (unsigned char) C_r;
+        *(pix_data + i)     = (unsigned char) Y * 255;
+        *(pix_data + i + 1) = (unsigned char) ((C_b + 0.5) * 255);
+        *(pix_data + i + 2) = (unsigned char) ((C_r + 0.5) * 255);
     }
 }
 
+// ToDO: debug
 void YCbCr_601_2_rgb(unsigned char *pix_data, int all_bytes) {
-    for (int i = 0; i < all_bytes; i += 3) {
+    /*for (int i = 0; i < all_bytes; i += 3) {
         long double Y = pix_data[i] / (long double) 255.0;
-        long double C_b = pix_data[i + 1] / (long double) 255.0;
-        long double C_r = pix_data[i + 2] / (long double) 255.0;
+        long double C_b = pix_data[i + 1] / (long double) 255.0 - 0.5;
+        long double C_r = pix_data[i + 2] / (long double) 255.0 - 0.5;
 
         // To RGB:
         *(pix_data + i)     = (unsigned char) (298.082 * Y / 256 + 408.583 * C_r / 256 - 222.921);
         *(pix_data + i + 1) = (unsigned char) (298.082 * Y / 256 - 100.291 * C_b - 208.120 * C_r / 256 + 135.576);
         *(pix_data + i + 2) = (unsigned char) (298.082 * Y / 256 + 516.412 * C_b / 256 - 276.836);
+    }*/
+
+    long double K_b = 0.114;
+    long double K_r = 0.299;
+    long double K_g = 1 - K_b - K_r;
+
+    for (int i = 0; i < all_bytes; i += 3) {
+        long double Y =   pix_data[i]     / (long double) 255.0;
+        long double C_b = pix_data[i + 1] / (long double) 255.0 - 0.5;
+        long double C_r = pix_data[i + 2] / (long double) 255.0 - 0.5;
+
+        long double R = Y + (2 - 2 * K_r) * C_r;
+        long double G = Y - K_b * (2 - 2 * K_b) * C_b / K_g - K_r * (2 - 2 * K_r) * C_r / K_g;
+        long double B = Y + (2 - 2 * K_b) * C_b;
+
+        // To RGB:
+        *(pix_data + i)     = (unsigned char) R * 255;
+        *(pix_data + i + 1) = (unsigned char) G * 255;
+        *(pix_data + i + 2) = (unsigned char) B * 255;
     }
 }
 
@@ -213,8 +233,8 @@ void rgb_2_YCbCr_709(unsigned char *pix_data, int all_bytes) {
 
         // To YCbCr_709:
         *(pix_data + i)     = (unsigned char) Y   * 255;
-        *(pix_data + i + 1) = (unsigned char) C_b * 255;
-        *(pix_data + i + 2) = (unsigned char) C_r * 255;
+        *(pix_data + i + 1) = (unsigned char) ((C_b + 0.5) * 255);
+        *(pix_data + i + 2) = (unsigned char) ((C_r + 0.5) * 255);
     }
 }
 
@@ -225,8 +245,8 @@ void YCbCr_709_2_rgb(unsigned char *pix_data, int all_bytes) {
 
     for (int i = 0; i < all_bytes; i += 3) {
         long double Y =   pix_data[i]     / (long double) 255.0;
-        long double C_b = pix_data[i + 1] / (long double) 255.0;
-        long double C_r = pix_data[i + 2] / (long double) 255.0;
+        long double C_b = pix_data[i + 1] / (long double) 255.0 - 0.5;
+        long double C_r = pix_data[i + 2] / (long double) 255.0 - 0.5;
 
         long double R = Y + (2 - 2 * K_r) * C_r;
         long double G = Y - K_b * (2 - 2 * K_b) * C_b / K_g - K_r * (2 - 2 * K_r) * C_r / K_g;
