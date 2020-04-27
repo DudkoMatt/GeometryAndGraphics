@@ -466,10 +466,46 @@ int main(int argc, char *argv[]) {
 
     // Часть 3: преобразования
 
-    // ToDO
-    // conversions:
-    // RGB <=> HSV
+    // Conversions:
+    // RGB <=> any, except HSL
     // HSV <=> HSL
+
+    if (strcmp(from_color_space, to_color_space) != 0) {
+
+        // Изначально преобразуем в RGB
+        
+        if (strcmp(from_color_space, "HSL") == 0) {
+            hsl_2_hsv(pix_data, k_bytes);
+            hsv_2_rgb(pix_data, k_bytes);
+        } else if (strcmp(from_color_space, "HSV") == 0) {
+            hsv_2_rgb(pix_data, k_bytes);
+        } else if (strcmp(from_color_space, "YCbCr.601") == 0) {
+            YCbCr_601_2_rgb(pix_data, k_bytes);
+        } else if (strcmp(from_color_space, "YCbCr.709") == 0) {
+            YCbCr_709_2_rgb(pix_data, k_bytes);
+        } else if (strcmp(from_color_space, "YCoCg") == 0) {
+            YCoCg_2_rgb(pix_data, k_bytes);
+        } else if (strcmp(from_color_space, "CMY") == 0) {
+            cmy_2_rgb(pix_data, k_bytes);
+        }
+
+        // Затем в нужное пространство
+
+        if (strcmp(to_color_space, "HSL") == 0) {
+            rgb_2_hsv(pix_data, k_bytes);
+            hsv_2_hsl(pix_data, k_bytes);
+        } else if (strcmp(to_color_space, "HSV") == 0) {
+            rgb_2_hsv(pix_data, k_bytes);
+        } else if (strcmp(to_color_space, "YCbCr.601") == 0) {
+            rgb_2_YCbCr_601(pix_data, k_bytes);
+        } else if (strcmp(to_color_space, "YCbCr.709") == 0) {
+            rgb_2_YCbCr_709(pix_data, k_bytes);
+        } else if (strcmp(to_color_space, "YCoCg") == 0) {
+            rgb_2_YCoCg(pix_data, k_bytes);
+        } else if (strcmp(to_color_space, "CMY") == 0) {
+            rgb_2_cmy(pix_data, k_bytes);
+        }
+    }
 
     // Часть 4: вывод в файл(-ы)
 
