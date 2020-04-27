@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include <string>
+#include <algorithm>
 #include "write_data_pnm_v2.h"
 
 bool check_color_space(char *color_space) {
@@ -24,6 +25,56 @@ void add_channel(unsigned char *pix_data, int k_channel, int k_bytes_channel, co
 void get_separate_channel(const unsigned char *pix_data, int all_bytes, int k_channel, unsigned char *channel_data) {
     for (int i = 0; i < all_bytes / 3; ++i) {
         *(channel_data + i) = *(pix_data + 3 * i + k_channel);
+    }
+}
+
+void rgb2hsv(unsigned char *pix_data, int all_bytes) {
+    for (int i = 0; i < all_bytes; i += 3) {
+        int R = pix_data[i];
+        int G = pix_data[i + 1];
+        int B = pix_data[i + 2];
+
+        int MAX = std::max(R, std::max(G, B));
+        int MIN = std::min(R, std::min(G, B));
+
+        // All in [0.0 .. 1.0]
+        //   H in [0 .. 360]
+        long double H, S, V;
+
+        // Calculating Hue
+        if (MAX == MIN) {
+            H = 0;
+        } else if (MAX == R) {
+            if (G >= B) {
+                H = 60.0 * (G - B) / (MAX - MIN);
+            } else {
+                // G < B
+                H = 60.0 * (G - B) / (MAX - MIN) + 360;
+            }
+        } else if (MAX == G) {
+            H = 60.0 * (B - R) / (MAX - MIN) + 120;
+        } else {
+            // MAX == B
+            H = 60.0 * (R - G) / (MAX - MIN) + 240;
+        }
+
+        // Calculating Saturation
+        if (MAX == 0) {
+            S = 0;
+        } else {
+            S = 1 - (long double) MIN / MAX;
+        }
+
+        // Calculating Value
+        V = MAX;
+
+        // Transform to PC range: [0 .. 255]
+        // H:
+        *(pix_data + i)     = (unsigned char) (H / 360.0 * 255);
+        // S:
+        *(pix_data + i + 1) = (unsigned char) (S * 255);
+        // V:
+        *(pix_data + i + 2) = (unsigned char) (V * 255);
     }
 }
 
