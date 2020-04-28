@@ -514,8 +514,7 @@ int main(int argc, char *argv[]) {
     // Часть 3: преобразования
 
     // Conversions:
-    // RGB <=> any, except HSL
-    // HSV <=> HSL
+    // RGB <=> any
 
     if (strcmp(from_color_space, to_color_space) != 0) {
 
