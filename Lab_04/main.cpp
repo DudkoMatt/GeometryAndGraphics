@@ -133,27 +133,27 @@ void hsv_2_rgb(unsigned char *pix_data, int all_bytes) {
 
         double C = V * S_v;
         double _H = H / 60;
-        double X = C * (1 - std::abs(((int) _H) % 2 - 1));
+        double X = C * (1 - std::abs(((int) _H) % 2 + (_H - (int) _H) - 1));
 
         double _R, _G, _B;
 
-        if (in_range(0., H, 1.)) {
+        if (in_range(0.0, _H, 1.0)) {
             _R = C;
             _G = X;
             _B = 0;
-        } else if (in_range(1., H, 2.)) {
+        } else if (in_range(1.0, _H, 2.0)) {
             _R = X;
             _G = C;
             _B = 0;
-        } else if (in_range(2., H, 3.)) {
+        } else if (in_range(2.0, _H, 3.0)) {
             _R = 0;
             _G = C;
             _B = X;
-        } else if (in_range(3., H, 4.)) {
+        } else if (in_range(3.0, _H, 4.0)) {
             _R = 0;
             _G = X;
             _B = C;
-        } else if (in_range(4., H, 5.)) {
+        } else if (in_range(4.0, _H, 5.0)) {
             _R = X;
             _G = 0;
             _B = C;
