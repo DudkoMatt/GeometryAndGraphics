@@ -183,7 +183,7 @@ void hsl_2_rgb(unsigned char *pix_data, int all_bytes) {
 
         double C = (1 - std::abs(2 * L - 1)) * S_l;
         double _H = H / 60;
-        double X = C * (1 - std::abs(((int) _H) % 2 - 1));
+        double X = C * (1 - std::abs(((int) _H) % 2 + (_H - (int) _H) - 1));
 
         double _R, _G, _B;
 
