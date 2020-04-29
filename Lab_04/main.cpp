@@ -187,27 +187,27 @@ void hsl_2_rgb(unsigned char *pix_data, int all_bytes) {
 
         double _R, _G, _B;
 
-        if (std::ceil(_H) == 1) {
+        if (std::ceil(_H) - 1.0 < 0.001) {
             _R = C;
             _G = X;
             _B = 0;
-        } else if (std::ceil(_H) == 2) {
+        } else if (std::ceil(_H) - 2.0 < 0.001) {
             _R = X;
             _G = C;
             _B = 0;
-        } else if (std::ceil(_H) == 3) {
+        } else if (std::ceil(_H) - 3.0 < 0.001) {
             _R = 0;
             _G = C;
             _B = X;
-        } else if (std::ceil(_H) == 4) {
+        } else if (std::ceil(_H) - 4.0 < 0.001) {
             _R = 0;
             _G = X;
             _B = C;
-        } else if (std::ceil(_H) == 5) {
+        } else if (std::ceil(_H) - 5.0 < 0.001) {
             _R = X;
             _G = 0;
             _B = C;
-        } else if (std::ceil(_H) == 6) {
+        } else if (std::ceil(_H) - 6.0 < 0.001) {
             _R = C;
             _G = 0;
             _B = X;
