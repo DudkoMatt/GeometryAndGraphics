@@ -1,4 +1,7 @@
 #include <iostream>
+#include <vector>
+#include <cmath>
+#include <iomanip>
 #include "../Lab_04/write_data_pnm_v2.h"
 #include "conversions_color_spaces.h"
 
@@ -18,10 +21,35 @@ void change_offset_multiply_Y(unsigned char *pix_data, int all_bytes, int offset
     }
 }
 
+void
+count_all_brightnesses_RGB(const unsigned char *pix_data, int all_bytes, char char_header, std::vector<long long> &nums) {
+    if (char_header == '5') {
+        // Gray
+        for (int i = 0; i < all_bytes; ++i) {
+            nums[*(pix_data + i)] += 1;
+        }
+    } else {
+        // RGB
+        for (int i = 0; i < all_bytes; i += 3) {
+            long double relative_luminance =
+                    std::round(0.2126l * (*(pix_data + i)) + 0.7152 * (*(pix_data + i + 1)) + 0.0722 * (*(pix_data + i + 2)));
+            nums[limit_brightness(relative_luminance)] += 1;
+        }
+    }
+}
+
+void
+count_all_brightnesses_YCbCr(const unsigned char *pix_data, int all_bytes, std::vector<long long> &nums) {
+    for (int i = 0; i < all_bytes; i += 3) {
+        nums[*(pix_data + i)] += 1;
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     if (argc != 4 && argc != 6) {
-        std::cerr << "Wrong number of arguments. Syntax:\n<lab5>.exe <file_in> <file_out> <conversion> [<offset> <multiplier>]\n";
+        std::cerr
+                << "Wrong number of arguments. Syntax:\n<lab5>.exe <file_in> <file_out> <conversion> [<offset> <multiplier>]\n";
         return 1;
     }
 
@@ -37,7 +65,9 @@ int main(int argc, char *argv[]) {
         multiplier = std::stold(argv[5]);
     }
 
-    if (conversion > 5 || ((conversion == 0 || conversion == 1) && argc != 6) || (conversion > 1 && argc == 6)) {
+    if (conversion > 5 || ((conversion == 0 || conversion == 1) && argc != 6) || (conversion > 1 && argc == 6)
+        || (argc == 6 && (std::abs(offset) > 255 || multiplier < 0 || multiplier - 1.0l / 255 < 0.001l
+        || multiplier - 255.0l > 0.001l))) {
         std::cerr << "Wrong arguments\n";
         return 1;
     }
@@ -85,31 +115,95 @@ int main(int argc, char *argv[]) {
 
     read_data(file_in, k_bytes, pix_data);
 
+    if (conversion % 2 == 1) {
+        conversions::rgb_2_YCbCr_601(pix_data, k_bytes);
+    }
 
     // Преобразования
-    switch (conversion) {
-        case 0:
-            change_offset_multiply_all(pix_data, k_bytes, offset, multiplier);
-            break;
-        case 1:
-            conversions::rgb_2_YCbCr_601(pix_data, k_bytes);
-            change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
-            conversions::YCbCr_601_2_rgb(pix_data, k_bytes);
-            break;
-        case 2:
-            // ToDO
-            break;
-        case 3:
-            // ToDO
-            break;
-        case 4:
-            // ToDO
-            break;
-        case 5:
-            // ToDO
-            break;
-        default:
-            break;
+    if (conversion == 0) {
+        change_offset_multiply_all(pix_data, k_bytes, offset, multiplier);
+    } else if (conversion == 1) {
+        change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
+    } else {
+        std::vector<long long> nums_brightnesses = std::vector<long long>(256, 0);
+        if (conversion % 2 == 0)
+            count_all_brightnesses_RGB(pix_data, k_bytes, char_header, nums_brightnesses);
+        else
+            count_all_brightnesses_YCbCr(pix_data, k_bytes, nums_brightnesses);
+
+        if (conversion == 2 || conversion == 3) {
+            int min_idx = 0;
+            int max_idx = 255;
+            while (nums_brightnesses[min_idx] == 0) ++min_idx;
+            while (nums_brightnesses[max_idx] == 0) --max_idx;
+            offset = min_idx;
+            multiplier = 255.0l / (max_idx - min_idx);
+            std::cout << "Calculated offset: " << offset << "\n";
+            std::cout << "Multiplier: " << std::setprecision(5) << multiplier << "\n";
+
+            if (conversion == 2) {
+                change_offset_multiply_all(pix_data, k_bytes, offset, multiplier);
+            } else {
+                // conversion == 3
+                change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
+            }
+
+        } else {
+
+            // Игнорируем 0.39% пикселей с двух сторон
+
+            int pixels_count = width * height;
+            auto ignoring_count = (long long) std::round(0.0039l * pixels_count);
+
+            int min_idx = 0;
+            int max_idx = 255;
+            // min_idx <= 255 - излишне, но оставим на всякий случай
+            while (min_idx <= 255 && (nums_brightnesses[min_idx] == 0 || ignoring_count > 0)) {
+                if (nums_brightnesses[min_idx] == 0) {
+                    ++min_idx;
+                    continue;
+                }
+
+                if (ignoring_count >= nums_brightnesses[min_idx]) {
+                    ignoring_count -= nums_brightnesses[min_idx];
+                    ++min_idx;
+                } else {
+                    break;
+                }
+            }
+
+            ignoring_count = (long long) std::round(0.0039l * pixels_count);
+            // max_idx >= 0 - излишне, но оставим на всякий случай
+            while (max_idx >= 0 && (nums_brightnesses[max_idx] == 0|| ignoring_count > 0)) {
+                if (nums_brightnesses[max_idx] == 0) {
+                    --max_idx;
+                    continue;
+                }
+                if (ignoring_count >= nums_brightnesses[min_idx]) {
+                    ignoring_count -= nums_brightnesses[min_idx];
+                    --max_idx;
+                } else {
+                    break;
+                }
+            }
+
+            offset = min_idx;
+            multiplier = 255.0l / (max_idx - min_idx);
+            std::cout << "Calculated offset: " << offset << "\n";
+            std::cout << "Multiplier: " << std::setprecision(5) << multiplier << "\n";
+
+            if (conversion == 4) {
+                change_offset_multiply_all(pix_data, k_bytes, offset, multiplier);
+            } else {
+                // conversion == 5
+                change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
+            }
+        }
+
+    }
+
+    if (conversion % 2 == 1) {
+        conversions::YCbCr_601_2_rgb(pix_data, k_bytes);
     }
 
 
