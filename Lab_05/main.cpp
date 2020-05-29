@@ -15,33 +15,40 @@ void change_offset_multiply_all(unsigned char *pix_data, int all_bytes, int offs
     }
 }
 
+// RGB
 void change_offset_multiply_Y(unsigned char *pix_data, int all_bytes, int offset, long double multiplier) {
     for (int i = 0; i < all_bytes; i += 3) {
         *(pix_data + i) = limit_brightness(((int) *(pix_data + i) - offset) * multiplier);
     }
 }
 
+// Gray
+void change_offset_multiply_Y_gray(unsigned char *pix_data, int all_bytes, int offset, long double multiplier) {
+    for (int i = 0; i < all_bytes; ++i) {
+        *(pix_data + i) = limit_brightness(((int) *(pix_data + i) - offset) * multiplier);
+    }
+}
+
+
 void
-count_all_brightnesses_RGB(const unsigned char *pix_data, int all_bytes, char char_header, std::vector<long long> &nums) {
+count_all_brightnesses_RGB(const unsigned char *pix_data, int all_bytes, std::vector<long long> &nums) {
+    for (int i = 0; i < all_bytes; ++i) {
+        nums[*(pix_data + i)] += 1;
+    }
+}
+
+void
+count_all_brightnesses_YCbCr(const unsigned char *pix_data, int all_bytes, char char_header, std::vector<long long> &nums) {
     if (char_header == '5') {
         // Gray
         for (int i = 0; i < all_bytes; ++i) {
             nums[*(pix_data + i)] += 1;
         }
     } else {
-        // RGB
+        // RGB -> YCbCr
         for (int i = 0; i < all_bytes; i += 3) {
-            long double relative_luminance =
-                    std::round(0.2126l * (*(pix_data + i)) + 0.7152 * (*(pix_data + i + 1)) + 0.0722 * (*(pix_data + i + 2)));
-            nums[limit_brightness(relative_luminance)] += 1;
+            nums[*(pix_data + i)] += 1;
         }
-    }
-}
-
-void
-count_all_brightnesses_YCbCr(const unsigned char *pix_data, int all_bytes, std::vector<long long> &nums) {
-    for (int i = 0; i < all_bytes; i += 3) {
-        nums[*(pix_data + i)] += 1;
     }
 }
 
@@ -91,15 +98,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-
-    // Проверка совместимости преобразования и формата файла
-    if (char_header == '5' && conversion % 2 == 1) {
-        std::cerr << "Cannot apply conversion for PGM file format\n";
-        free_data(file_in);
-        return 1;
-    }
-
-
     FILE *file_out = nullptr;
     int k_bytes = height * width;
 
@@ -123,13 +121,16 @@ int main(int argc, char *argv[]) {
     if (conversion == 0) {
         change_offset_multiply_all(pix_data, k_bytes, offset, multiplier);
     } else if (conversion == 1) {
-        change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
+        if (char_header == '6')
+            change_offset_multiply_Y_gray(pix_data, k_bytes, offset, multiplier);
+        else
+            change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
     } else {
         std::vector<long long> nums_brightnesses = std::vector<long long>(256, 0);
         if (conversion % 2 == 0)
-            count_all_brightnesses_RGB(pix_data, k_bytes, char_header, nums_brightnesses);
+            count_all_brightnesses_RGB(pix_data, k_bytes, nums_brightnesses);
         else
-            count_all_brightnesses_YCbCr(pix_data, k_bytes, nums_brightnesses);
+            count_all_brightnesses_YCbCr(pix_data, k_bytes, char_header, nums_brightnesses);
 
         if (conversion == 2 || conversion == 3) {
             int min_idx = 0;
