@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
 
     read_data(file_in, k_bytes, pix_data);
 
-    if (conversion % 2 == 1) {
+    if (conversion % 2 == 1 && char_header == '6') {
         conversions::rgb_2_YCbCr_601(pix_data, k_bytes);
     }
 
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
     if (conversion == 0) {
         change_offset_multiply_all(pix_data, k_bytes, offset, multiplier);
     } else if (conversion == 1) {
-        if (char_header == '6')
+        if (char_header == '5')
             change_offset_multiply_Y_gray(pix_data, k_bytes, offset, multiplier);
         else
             change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
 
     }
 
-    if (conversion % 2 == 1) {
+    if (conversion % 2 == 1 && char_header == '6') {
         conversions::YCbCr_601_2_rgb(pix_data, k_bytes);
     }
 
