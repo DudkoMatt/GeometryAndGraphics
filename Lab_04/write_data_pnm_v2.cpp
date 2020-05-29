@@ -4,6 +4,8 @@
 
 #include "write_data_pnm_v2.h"
 #include <cmath>
+#include <algorithm>
+#include <string>
 
 void write_header(FILE *file_out, char char_header, int width, int height, unsigned int max_value) {
     fseek(file_out, 0, SEEK_SET);

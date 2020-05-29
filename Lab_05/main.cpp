@@ -2,6 +2,8 @@
 #include <vector>
 #include <cmath>
 #include <iomanip>
+#include <algorithm>
+#include <string>
 #include "../Lab_04/write_data_pnm_v2.h"
 #include "conversions_color_spaces.h"
 
