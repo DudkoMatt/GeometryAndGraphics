@@ -148,7 +148,10 @@ int main(int argc, char *argv[]) {
                 change_offset_multiply_all(pix_data, k_bytes, offset, multiplier);
             } else {
                 // conversion == 3
-                change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
+                if (char_header == '5')
+                    change_offset_multiply_Y_gray(pix_data, k_bytes, offset, multiplier);
+                else
+                    change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
             }
 
         } else {
@@ -199,7 +202,10 @@ int main(int argc, char *argv[]) {
                 change_offset_multiply_all(pix_data, k_bytes, offset, multiplier);
             } else {
                 // conversion == 5
-                change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
+                if (char_header == '5')
+                    change_offset_multiply_Y_gray(pix_data, k_bytes, offset, multiplier);
+                else
+                    change_offset_multiply_Y(pix_data, k_bytes, offset, multiplier);
             }
         }
 
