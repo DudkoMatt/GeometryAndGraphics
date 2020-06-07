@@ -92,7 +92,7 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
             draw_pix(pix_data, width, x, y,
                      change_bitness(bitness, (unsigned char)
 
-                             limit_brightness(get_pix_color(x, y, width, pix_data_input) + barrier_brightness * 255)
+                             limit_brightness(get_pix_color(x, y, width, pix_data_input) + (barrier_brightness + 1.0l / 64) * 255)
 
                      ),
                      gamma);
@@ -507,7 +507,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-//        decode_gamma_from_file(input_pix_data, width * height, gamma);
+        decode_gamma_from_file(input_pix_data, width * height, gamma);
 
         if (dithering == 0) {
             // no_dithering
