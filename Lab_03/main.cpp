@@ -507,7 +507,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        decode_gamma_from_file(input_pix_data, width * height, gamma);
+//        decode_gamma_from_file(input_pix_data, width * height, gamma);
 
         if (dithering == 0) {
             // no_dithering
@@ -517,7 +517,7 @@ int main(int argc, char *argv[]) {
             for (int y = 0; y < height; ++y) {
                 for (int x = 0; x < width; ++x) {
                     draw_pix(pix_data, width, x, y,
-                             change_pix_gamma_to_print(*(input_pix_data + y * width + x), gamma),
+                             *(input_pix_data + y * width + x),
                              gamma);
                 }
             }

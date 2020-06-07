@@ -69,7 +69,7 @@ double to_sRGB(int brightness) {
     return to_sRGB(_brightness);
 }
 
-double change_pix_gamma_to_print(double _brightness, double gamma) {
+double change_pix_gamma_from_file(double _brightness, double gamma) {
     // Гамма коррекция:
     if (gamma > 0) {
         _brightness = std::pow(_brightness, 1.0 / gamma);
@@ -80,12 +80,12 @@ double change_pix_gamma_to_print(double _brightness, double gamma) {
     return _brightness;
 }
 
-double change_pix_gamma_to_print(unsigned char pix_data, double gamma) {
+double change_pix_gamma_from_file(unsigned char pix_data, double gamma) {
     double _brightness = pix_data / 255.0;
-    return change_pix_gamma_to_print(_brightness, gamma);
+    return change_pix_gamma_from_file(_brightness, gamma);
 }
 
-double change_pix_gamma_from_file(double _brightness, double gamma) {
+double change_pix_gamma_to_print(double _brightness, double gamma) {
     if (gamma > 0) {
         _brightness = std::pow(_brightness, gamma);
     } else {
@@ -95,7 +95,7 @@ double change_pix_gamma_from_file(double _brightness, double gamma) {
     return _brightness;
 }
 
-double change_pix_gamma_from_file(unsigned char pix_data, double gamma) {
+double change_pix_gamma_to_print(unsigned char pix_data, double gamma) {
     double _brightness = pix_data / 255.0;
     return change_pix_gamma_from_file(_brightness, gamma);
 }
@@ -104,13 +104,13 @@ void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, 
     double _brightness = brightness / 255.0;
 
     // Гамма коррекция:
-    change_pix_gamma_to_print(_brightness, gamma);
+    _brightness = change_pix_gamma_to_print(_brightness, gamma);
 
     pix_data[width * y + x] = limit_brightness(255 * _brightness);
 }
 
 void draw_pix(unsigned char *pix_data, int width, int x, int y, double _brightness, double gamma) {
-    change_pix_gamma_to_print(_brightness, gamma);
+    _brightness = change_pix_gamma_to_print(_brightness, gamma);
     pix_data[width * y + x] = limit_brightness(255 * _brightness);
 }
 
