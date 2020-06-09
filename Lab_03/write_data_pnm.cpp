@@ -97,25 +97,19 @@ double change_pix_gamma_to_print(double _brightness, double gamma) {
 
 double change_pix_gamma_to_print(unsigned char pix_data, double gamma) {
     double _brightness = pix_data / 255.0;
-    return change_pix_gamma_from_file(_brightness, gamma);
+    return change_pix_gamma_to_print(_brightness, gamma);
 }
 
-void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness, double gamma) {
-    double _brightness = brightness / 255.0;
-
-    // Гамма коррекция:
-    _brightness = change_pix_gamma_to_print(_brightness, gamma);
-
-    pix_data[width * y + x] = limit_brightness(255 * _brightness);
+void draw_pix(unsigned char *pix_data, int width, int x, int y, int brightness) {
+    pix_data[width * y + x] = limit_brightness(brightness);
 }
 
-void draw_pix(unsigned char *pix_data, int width, int x, int y, double _brightness, double gamma) {
-    _brightness = change_pix_gamma_to_print(_brightness, gamma);
+void draw_pix(unsigned char *pix_data, int width, int x, int y, double _brightness) {
     pix_data[width * y + x] = limit_brightness(255 * _brightness);
 }
 
 void decode_gamma_from_file(unsigned char *pix_data, int k, double gamma) {
     for (int i = 0; i < k; ++i) {
-        *(pix_data + i) = limit_brightness(255 * change_pix_gamma_from_file(*(pix_data + i), gamma));
+        *(pix_data + i) = limit_brightness(255 * change_pix_gamma_to_print(*(pix_data + i), gamma));
     }
 }

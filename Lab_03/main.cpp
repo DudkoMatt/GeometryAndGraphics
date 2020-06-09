@@ -35,13 +35,13 @@ const double Halftone_Matrix_double[4][4] = {
 
 
 // Вывод в 0..255
-unsigned char get_pix_color(int x, int y, int width, const unsigned char *pix_data) {
+unsigned char get_pix_color(int x, int y, int width, const unsigned char *pix_data, double gamma) {
     if (pix_data == nullptr) {
         // Горизонтальный градиент
         // x in [0 .. width - 1]
-        return (unsigned char) (255.0 * x / (width - 1));
+        return limit_brightness(255 * change_pix_gamma_to_print((unsigned char) (255.0 * x / (width - 1)), gamma));
     } else {
-        return *(pix_data + y * width + x);
+        return limit_brightness(255 * change_pix_gamma_to_print(*(pix_data + y * width + x), gamma));
     }
 }
 
@@ -66,7 +66,7 @@ void no_dithering_file(unsigned bitness, size_t k, unsigned char *pix_data) {
 
 void fill_vertical_line(int x, int width, int height, unsigned char color, double gamma, unsigned char *pix_data) {
     for (int i = 0; i < height; ++i) {
-        draw_pix(pix_data, width, x, i, color, gamma);
+        draw_pix(pix_data, width, x, i, color);
     }
 }
 
@@ -76,9 +76,9 @@ void no_dithering(int width, int height, unsigned char *pix_data, double gamma, 
                 i, width, height,
                 change_bitness(
                         bitness,
-                        get_pix_color(i, 0, width, nullptr)
+                        get_pix_color(i, 0, width, nullptr, gamma)
                 ),
-                gamma, pix_data);
+                1, pix_data);
     }
 }
 
@@ -92,10 +92,9 @@ void ordered_dithering(int width, int height, unsigned char *pix_data, double ga
             draw_pix(pix_data, width, x, y,
                      change_bitness(bitness, (unsigned char)
 
-                             limit_brightness(get_pix_color(x, y, width, pix_data_input) + (barrier_brightness + 1.0l / 64) * 255)
+                             limit_brightness(get_pix_color(x, y, width, pix_data_input, gamma) + (barrier_brightness + 1.0l / 64) * 255)
 
-                     ),
-                     gamma);
+                     ));
 
 
         }
@@ -107,7 +106,7 @@ void random_dithering(int width, int height, unsigned char *pix_data, double gam
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
 
-            unsigned char curr_brightness_char = get_pix_color(x, y, width, pix_data_input);
+            unsigned char curr_brightness_char = get_pix_color(x, y, width, pix_data_input, gamma);
             unsigned char nearest_palette_color;
 
             nearest_palette_color = change_bitness(bitness,
@@ -115,8 +114,7 @@ void random_dithering(int width, int height, unsigned char *pix_data, double gam
                                                                     (((double) std::rand() / (RAND_MAX)) * 255 - 128)));
 
             draw_pix(pix_data, width, x, y,
-                     nearest_palette_color,
-                     gamma);
+                     nearest_palette_color);
 
         }
     }
@@ -130,7 +128,7 @@ void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, d
         for (int x = 0; x < width; ++x) {
 
             unsigned char curr_brightness_char = limit_brightness(
-                    get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+                    get_pix_color(x, y, width, pix_data_input, gamma) + errors[y][x]);
             unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
             int err = curr_brightness_char - nearest_palette_color;
 
@@ -154,8 +152,7 @@ void Floyd_Steinberg_dithering(int width, int height, unsigned char *pix_data, d
             }
 
             draw_pix(pix_data, width, x, y,
-                     nearest_palette_color,
-                     gamma);
+                     nearest_palette_color);
 
 
         }
@@ -171,7 +168,7 @@ void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_dat
         for (int x = 0; x < width; ++x) {
 
             unsigned char curr_brightness_char = limit_brightness(
-                    get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+                    get_pix_color(x, y, width, pix_data_input, gamma) + errors[y][x]);
             unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
             int err = curr_brightness_char - nearest_palette_color;
 
@@ -229,8 +226,7 @@ void Jarvis_Judice_Ninke_dithering(int width, int height, unsigned char *pix_dat
             }
 
             draw_pix(pix_data, width, x, y,
-                     nearest_palette_color,
-                     gamma);
+                     nearest_palette_color);
 
 
         }
@@ -245,7 +241,7 @@ void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double g
         for (int x = 0; x < width; ++x) {
 
             unsigned char curr_brightness_char = limit_brightness(
-                    get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+                    get_pix_color(x, y, width, pix_data_input, gamma) + errors[y][x]);
             unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
             int err = curr_brightness_char - nearest_palette_color;
 
@@ -296,8 +292,7 @@ void Sierra_3_dithering(int width, int height, unsigned char *pix_data, double g
             }
 
             draw_pix(pix_data, width, x, y,
-                     nearest_palette_color,
-                     gamma);
+                     nearest_palette_color);
 
         }
     }
@@ -311,7 +306,7 @@ void Atkinson_dithering(int width, int height, unsigned char *pix_data, double g
         for (int x = 0; x < width; ++x) {
 
             unsigned char curr_brightness_char = limit_brightness(
-                    get_pix_color(x, y, width, pix_data_input) + errors[y][x]);
+                    get_pix_color(x, y, width, pix_data_input, gamma) + errors[y][x]);
             unsigned char nearest_palette_color = change_bitness(bitness, curr_brightness_char);
             int err = curr_brightness_char - nearest_palette_color;
 
@@ -346,8 +341,7 @@ void Atkinson_dithering(int width, int height, unsigned char *pix_data, double g
             }
 
             draw_pix(pix_data, width, x, y,
-                     nearest_palette_color,
-                     gamma);
+                     nearest_palette_color);
 
 
         }
@@ -380,9 +374,8 @@ void Halftone_dithering(int width, int height, unsigned char *pix_data, double g
 
             draw_pix(pix_data, width, x, y,
                      find_nearest_palette_color(bitness,
-                                                get_pix_color(x, y, width, pix_data_input),
-                                                (unsigned char) (255 * Halftone_Matrix_double[y % 4][x % 4])),
-                     gamma);
+                                                get_pix_color(x, y, width, pix_data_input, gamma),
+                                                (unsigned char) (255 * Halftone_Matrix_double[y % 4][x % 4])));
 
 
         }
@@ -517,8 +510,7 @@ int main(int argc, char *argv[]) {
             for (int y = 0; y < height; ++y) {
                 for (int x = 0; x < width; ++x) {
                     draw_pix(pix_data, width, x, y,
-                             *(input_pix_data + y * width + x),
-                             gamma);
+                             *(input_pix_data + y * width + x));
                 }
             }
 
