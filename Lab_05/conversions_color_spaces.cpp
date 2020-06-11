@@ -235,9 +235,9 @@ namespace conversions {
     }
 
     void rgb_2_YCbCr_601(unsigned char *pix_data, int all_bytes) {
-        double K_b = 0.299;
-        double K_r = 0.587;
-        double K_g = 0.114;
+        double K_r = 0.299;
+        double K_g = 0.587;
+        double K_b = 0.114;
 
         for (int i = 0; i < all_bytes; i += 3) {
             double R = pix_data[i] / 255.0;
@@ -256,9 +256,9 @@ namespace conversions {
     }
 
     void YCbCr_601_2_rgb(unsigned char *pix_data, int all_bytes) {
-        double K_b = 0.299;
-        double K_r = 0.587;
-        double K_g = 0.114;
+        double K_r = 0.299;
+        double K_g = 0.587;
+        double K_b = 0.114;
 
         for (int i = 0; i < all_bytes; i += 3) {
             double Y = pix_data[i] / 255.0;
